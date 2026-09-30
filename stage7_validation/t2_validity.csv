@@ -1,0 +1,7 @@
+,spearman,ci_low,ci_high
+two-sided conceding stake  vs real cost of conceding,0.9828047921071177,0.9657505285412262,0.989644115574348
+scoring-only pressure      vs real cost of conceding,0.3923890063424947,0.3502043692741367,0.4024101479915433
+two-sided scoring stake    vs real gain of scoring,0.983368569415081,0.9669450317124735,0.9921811134601832
+scoring-only pressure      vs real gain of scoring,0.969415081042988,0.9505144467935165,0.9795031712473573
+two-sided total stakes     vs real total stakes,0.9782945736434108,0.9493939393939392,0.9893622269203663
+scoring-only pressure      vs real total stakes,0.7537702607470048,0.7220824524312897,0.7770260747004932

@@ -1,0 +1,5 @@
+,two-sided / scoring-only,ci_low,ci_high,p (ratio <= 1)
+"weight on stopping a goal, leading by 1 (80'+)",4.610467261342784,4.562107907044381,4.658153558005703,0.0
+"goal-prevention credit while ahead, goalkeepers",2.568909218392678,2.50732658038153,2.6465809347646765,0.0
+"goal-prevention credit while ahead, defenders",2.7447318344228653,2.6073073195671697,2.8940220066701308,0.0
+"goal-prevention credit while ahead, midfielders",3.0067689780886293,2.68600590393252,3.5134853142714304,0.0

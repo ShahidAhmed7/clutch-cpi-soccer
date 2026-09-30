@@ -1,0 +1,10 @@
+# Python 3.10+; notebooks were run on Google Colab (stages 1-5) and locally (stages 6-7)
+pandas>=2.2
+numpy>=2.0
+scipy>=1.13
+pyarrow>=15
+scikit-learn>=1.4
+catboost>=1.2
+matplotlib>=3.8
+seaborn>=0.13
+tqdm>=4.66
