@@ -5,9 +5,11 @@ Code, data and results for our MIT Sloan Sports Analytics Conference 2027 resear
 
 **Authors:** Kazi Shahid Ahmed Galib, Shihab Shahriar, Tarvir Anjum Aditto
 
-We call an action **clutch** when it adds value while the result is at stake: scoring would improve the
-result, or conceding would worsen it. The **Clutch Performance Index (CPI)** values every on-ball action by
-how it changed its team's chances of scoring and conceding, weighted by what the next goal would gain or cost.
+A **clutch** action is one that adds value when the result is on the line: it makes a goal more likely when
+scoring would change the result, or a goal against less likely when conceding would. The
+**Clutch Performance Index (CPI)** turns this into a player rating. Every on-ball action is credited with how
+much it changed its team's chances of scoring and conceding, each weighted by what the next goal would be worth
+in league points, and the credit is averaged over the season.
 
 ![Pipeline](abstract/pipeline_figure.png)
 
