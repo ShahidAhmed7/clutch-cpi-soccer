@@ -18,13 +18,13 @@
 \end{center}
 \vspace{-6pt}
 \noindent\textbf{Introduction}\\
-Some moments in soccer matter far more than others: an equaliser in stoppage time, or a last-ditch block that protects a one-goal lead. VAEP (Decroos et al., 2019) values actions by changes in near-term scoring and conceding probabilities, but does not explicitly weight them by how much the next goal would alter the result, and Bransen et al. (2019) define in-game pressure only by what scoring would change. Yet stakes are asymmetric: when leading late, conceding can cost far more than scoring gains, so scoring-focused metrics undervalue players who protect leads, which matters for recruitment. We therefore introduce the Clutch Performance Index (CPI), which weights each action's effect on scoring and on conceding by the league points at stake.
+Some moments in soccer matter far more than others: an equaliser in stoppage time, or a last-ditch block that protects a one-goal lead. VAEP (Decroos et al., 2019) values actions by changes in near-term scoring and conceding probabilities, but does not explicitly weight them by how much the next goal would alter the result, and Bransen et al. (2019) define in-game pressure only by what scoring would change. Yet stakes are asymmetric: when leading late, conceding can cost far more than scoring gains, so scoring-focused metrics undervalue players who protect leads, which matters for recruitment. We therefore introduce the Clutch Performance Index (CPI), which weights each action's effect on scoring and conceding by the league points at stake.
 
 \noindent\textbf{Methods}\\
-We use the public Wyscout dataset (Pappalardo et al., 2019): 2.83 million actions from Europe's five top leagues in 2017/18, a complete public season, for reproducibility. Our pipeline (Figure~\ref{fig:pipeline}) first estimates how each action changes its team's probability of scoring and conceding within ten actions, using two CatBoost classifiers. A logistic model then converts score, time left and home advantage into expected league points, $W = 3P(\text{win}) + P(\text{draw})$, giving every moment a gain if the team scores next ($L^{+}$) and a cost if it concedes next ($L^{-}$). All models are validated on held-out leagues (ROC-AUC 0.78 and 0.81 for the classifiers, 0.71--0.72 for the logistic model). An action's clutch value is its scoring change times $L^{+}$ minus its conceding change times $L^{-}$; a player's CPI is total clutch value per 56 actions, the median number of actions per appearance.
+We use the Wyscout dataset (Pappalardo et al., 2019): 2.83 million actions from Europe's five top leagues in 2017/18, a complete public season, for reproducibility. Our pipeline (Figure~\ref{fig:pipeline}) first estimates how each action changes its team's probability of scoring and conceding within ten actions, using two CatBoost classifiers. A logistic model then converts score, time left and home advantage into expected league points, $W = 3P(\text{win}) + P(\text{draw})$, giving every moment a gain if the team scores next ($L^{+}$) and a cost if it concedes next ($L^{-}$). All models are validated on held-out leagues (ROC-AUC 0.78 and 0.81 for the classifiers, 0.71--0.72 for the logistic model). An action's clutch value is its scoring change times $L^{+}$ minus its conceding change times $L^{-}$; a player's CPI is total clutch value per 56 actions, the median number of actions per appearance.
 
 \noindent\textbf{Results}\\
-Stakes depend on the score: late in a level game, scoring is worth 1.6 league points; one goal up, conceding costs 1.6, scoring only 0.2. Across 44 minute-by-score states, held-out $L^{-}$ has Spearman correlation 0.98 with the real cost of conceding in final results; for scoring-only pressure it is 0.39. While leading, goal-saving actions earn 2.6--3 times more credit than under scoring-only weighting. Table~\ref{tab:leaders} lists the top two players per position with 95\% intervals from resampling whole matches. Oblak, 38th of 95 goalkeepers by plain action value, ranks first on goal prevention (top ten in 97\% of resamples). Season CPI is moderately stable (split-half reliability 0.51).
+These stakes vary sharply with the score: late in a level game, scoring is worth 1.6 league points, but one goal up, conceding costs 1.6 while scoring adds only 0.2. They also match reality: across 44 minute-by-score states, held-out $L^{-}$ correlates at 0.98 (Spearman) with the observed cost of conceding in final results, versus 0.39 for scoring-only pressure. So, while leading, goal-saving actions earn 2.6--3 times more credit than under scoring-only weighting. Table~\ref{tab:leaders} lists the top two per position with 95\% intervals from resampling whole matches. Oblak, 38th of 95 goalkeepers by plain action value, ranks first on goal prevention (top ten in 97\% of resamples). Season CPI is moderately stable (split-half reliability 0.51).
 
 \noindent\textbf{Conclusion}\\
 CPI puts attacking and defending on one scale, helping clubs find undervalued clutch players, especially defenders and goalkeepers, and showing analysts and broadcasters who delivered in decisive moments.
@@ -33,7 +33,7 @@ CPI puts attacking and defending on one scale, helping clubs find undervalued cl
 \centering
 \includegraphics[width=0.82\linewidth]{pipeline_figure.png}
 \vspace{-4pt}
-\caption{The CPI pipeline.}
+\caption{CPI pipeline.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -42,7 +42,7 @@ CPI puts attacking and defending on one scale, helping clubs find undervalued cl
 \footnotesize
 \setlength{\tabcolsep}{6pt}
 \renewcommand{\arraystretch}{0.95}
-\caption{CPI (95\% CI), top-10 share across resamples and plain action-value rank; goalkeepers ranked on goal prevention.}
+\caption{CPI (95\% CI), top-10 share across resamples, plain action-value rank; goalkeepers ranked on goal prevention.}
 \label{tab:leaders}
 \begin{tabular}{@{}l l c c c@{}}
 \toprule
