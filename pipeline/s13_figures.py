@@ -59,7 +59,7 @@ def fig_stakes():
     h = [plt.Line2D([], [], color=BLUE, lw=1.6, label='$L^{+}$, gain if the team scores next (model)'),
          plt.Line2D([], [], color=ORANGE, lw=1.6, label='$L^{-}$, cost if it concedes next (model)'),
          plt.Line2D([], [], marker='o', color=BLUE, ls='', ms=4, label='real gain'), plt.Line2D([], [], marker='s', color=ORANGE, ls='', ms=4, label='real cost')]
-    fig.legend(handles=h, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.2), fontsize=6.8, handlelength=1.6, columnspacing=1.2)
+    fig.legend(handles=h, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.29), fontsize=7.6, handlelength=1.6, columnspacing=1.2)
     save(fig, 'stakes')
 
 

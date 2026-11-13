@@ -8,28 +8,24 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{marvosym}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning}
 \usepackage{xurl}
 \usepackage[hidelinks]{hyperref}
+\usepackage{color}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
+\urlstyle{rm}
 \input{numbers.tex}
 \newcommand{\Lp}{L^{+}}
 \newcommand{\Lm}{L^{-}}
-\definecolor{navy}{HTML}{1F3A5F}
-\definecolor{sky}{HTML}{6FA8DC}
-\definecolor{paleblue}{HTML}{EAF1FB}
-\definecolor{palepeach}{HTML}{FBEBDD}
 
 \begin{document}
 \title{Measuring Clutch Performance in Soccer When the Result Is on the Line}
 \titlerunning{Measuring Clutch Performance in Soccer}
-\author{Kazi Shahid Ahmed Galib\inst{1}\textsuperscript{(\Letter)} \and
-Shihab Shahriar\inst{1} \and
-Tarvir Anjum Aditto\inst{2}}
+\author{Kazi Shahid Ahmed Galib\textsuperscript{(\Letter)} \and
+Shihab Shahriar \and
+Tarvir Anjum Aditto}
 \authorrunning{K. S. A. Galib et al.}
-\institute{Undergraduate Student, BRAC University, Dhaka, Bangladesh\\
-\email{shahid.ahmed.galib@g.bracu.ac.bd}, \email{shihab.shahriar@g.bracu.ac.bd} \and
-Lecturer, BRAC University, Dhaka, Bangladesh\\
+\institute{BRAC University, Dhaka, Bangladesh\\
+\email{shahid.ahmed.galib@g.bracu.ac.bd}, \email{shihab.shahriar@g.bracu.ac.bd},\\
 \email{tarvir.anjum@bracu.ac.bd}}
 \maketitle
 
@@ -53,13 +49,13 @@ For analysts, this makes decisive contributions comparable across roles. In our 
 
 \section{Related Work}
 \label{sec:related}
-\textbf{Action values.} VAEP~\cite{decroos2019} estimates the chances of scoring and conceding within a ten-action window and credits each action with the change. We use its reference implementation~\cite{socceraction} for conversion, features and the value rule, then weight the two value channels by their respective stakes.
+\textbf{Action Values.} VAEP~\cite{decroos2019} estimates the chances of scoring and conceding within a ten-action window and credits each action with the change. We use its reference implementation~\cite{socceraction} for conversion, features and the value rule, then weight the two value channels by their respective stakes.
 
-\textbf{Pressure and importance.} Bransen et al.~\cite{bransen2019} combine changes in win and draw probabilities if a team scores with pre-match importance. We price both scoring and conceding in league points. Sport psychology studies clutch performance as performing better than usual under pressure~\cite{otten2009,swann2017}; CPI describes stakes-weighted contributions, while our within-player analysis examines average differences across stakes.
+\textbf{Pressure and Importance.} Bransen et al.~\cite{bransen2019} combine changes in win and draw probabilities if a team scores with pre-match importance. We price both scoring and conceding in league points. Sport psychology studies clutch performance as performing better than usual under pressure~\cite{otten2009,swann2017}; CPI describes stakes-weighted contributions, while our within-player analysis examines average differences across stakes.
 
-\textbf{Expected points and win probability.} Kharrat et al.~\cite{kharrat2020} rate spells in expected points and warn against counting team strength twice; we omit it from the stakes. Robberechts et al.~\cite{robberechts2021} value soccer goals by expected points; Deshpande and Jensen~\cite{deshpande2016} rate NBA players by contributions to winning probability. We price soccer actions by both scoring and conceding stakes.
+\textbf{Expected Points and Win Probability.} Kharrat et al.~\cite{kharrat2020} rate spells in expected points and warn against counting team strength twice; we omit it from the stakes. Robberechts et al.~\cite{robberechts2021} value soccer goals by expected points; Deshpande and Jensen~\cite{deshpande2016} rate NBA players by contributions to winning probability. We price soccer actions by both scoring and conceding stakes.
 
-\textbf{Evaluating metrics.} Following Franks et al.~\cite{franks2016}, we assess reliability and discrimination separately. We resample whole matches, accounting for dependence among estimates sharing a game's outcome~\cite{brill2025}.
+\textbf{Evaluating Metrics.} Following Franks et al.~\cite{franks2016}, we assess reliability and discrimination separately. We resample whole matches, accounting for dependence among estimates sharing a game's outcome~\cite{brill2025}.
 
 \section{Data}
 \label{sec:data}
@@ -128,7 +124,7 @@ The distinction changes how credit is allocated. We define goal-prevention actio
 
 \section{What CPI Measures}
 \label{sec:cpi}
-\textbf{Agreement with league points.} We compare a team's summed action value minus its opponent's with observed points, fitting a regression with an intercept. At match level, the slope is \ledgerMatchSlope{} and correlation \ledgerMatchR{}, compared with \ledgerMatchRGd{} for goal difference and \ledgerMatchRVaep{} for unweighted VAEP. Across \ledgerTeams{} team seasons, the slope is \ledgerSeasonSlope{} and correlation \ledgerSeasonR{} (Fig.~\ref{fig:ledger}a). This supports the scale of the values, although the ledger is not an exact reconstruction of league points. Unweighted VAEP requires a fitted slope of about one half to map onto points.
+\textbf{Agreement with League Points.} We compare a team's summed action value minus its opponent's with observed points, fitting a regression with an intercept. At match level, the slope is \ledgerMatchSlope{} and correlation \ledgerMatchR{}, compared with \ledgerMatchRGd{} for goal difference and \ledgerMatchRVaep{} for unweighted VAEP. Across \ledgerTeams{} team seasons, the slope is \ledgerSeasonSlope{} and correlation \ledgerSeasonR{} (Fig.~\ref{fig:ledger}a). This supports the scale of the values, although the ledger is not an exact reconstruction of league points. Unweighted VAEP requires a fitted slope of about one half to map onto points.
 
 \begin{figure}[tb]
 \centering
@@ -137,7 +133,7 @@ The distinction changes how credit is allocated. We define goal-prevention actio
 \label{fig:ledger}
 \end{figure}
 
-\textbf{How CPI differs from VAEP.} Stakes change contribution credit despite broad agreement between the ratings. Goals have similar VAEP values across situations (Table~\ref{tab:goals}), but mean clutch value is \goalLevelLateV{} points from a level score after minute 85 and near zero three or more goals ahead after minute 60. The lowest-stakes fifth accounts for \shareLowVaep\% of total absolute VAEP value but \shareLowCpi\% of absolute clutch value; the highest-stakes fifth accounts for \shareTopVaep\% and \shareTopCpi\%. Rankings share \sharedTopLow{} to \sharedTopHigh{} players in each outfield top 10, with median changes of \moveLow{} to \moveHigh{} places across positions. Aubameyang's \goalsAubameyang{} non-penalty goals averaged \ppgAubameyang{} points, with \decidedAubameyang\% at low stakes ($\Lp<0.1$); Zapata's \goalsZapata{} averaged \ppgZapata{} (Fig.~\ref{fig:ledger}b).
+\textbf{How CPI Differs from VAEP.} Stakes change contribution credit despite broad agreement between the ratings. Goals have similar VAEP values across situations (Table~\ref{tab:goals}), but mean clutch value is \goalLevelLateV{} points from a level score after minute 85 and near zero three or more goals ahead after minute 60. The lowest-stakes fifth accounts for \shareLowVaep\% of total absolute VAEP value but \shareLowCpi\% of absolute clutch value; the highest-stakes fifth accounts for \shareTopVaep\% and \shareTopCpi\%. Rankings share \sharedTopLow{} to \sharedTopHigh{} players in each outfield top 10, with median changes of \moveLow{} to \moveHigh{} places across positions. Aubameyang's \goalsAubameyang{} non-penalty goals averaged \ppgAubameyang{} points, with \decidedAubameyang\% at low stakes ($\Lp<0.1$); Zapata's \goalsZapata{} averaged \ppgZapata{} (Fig.~\ref{fig:ledger}b).
 
 \begin{table}[tb]
 \centering
@@ -162,7 +158,7 @@ Player & Position & Team & VAEP rank & CPI rank \\
 \end{tabular}
 \end{table}
 
-\textbf{Player ratings on a common scale.} Mean CPI is \meanCPIF{} for forwards, \meanCPIM{} for midfielders, \meanCPID{} for defenders and \meanCPIG{} for goalkeepers, in league points per 90. Table~\ref{tab:leaders} lists each position's top three. Lionel Messi leads with \messiCPI{} (95\% interval \messiLow{} to \messiHigh{}), totalling \messiTotal{} season points. Shot-stopping credits David de Gea with \savedGea{} points above baseline, Alisson \savedAlisson{}, Jan Oblak \savedOblak{} and Nick Pope \savedPope{}. De Gea prevented \preventedGea{} estimated goals and Oblak \preventedOblak{}, but their points saved are similar because Oblak's shot outcomes carried greater stakes per goal prevented.
+\textbf{Player Ratings on a Common Scale.} Mean CPI is \meanCPIF{} for forwards, \meanCPIM{} for midfielders, \meanCPID{} for defenders and \meanCPIG{} for goalkeepers, in league points per 90. Table~\ref{tab:leaders} lists each position's top three. Lionel Messi leads with \messiCPI{} (95\% interval \messiLow{} to \messiHigh{}), totalling \messiTotal{} season points. Shot-stopping credits David de Gea with \savedGea{} points above baseline, Alisson \savedAlisson{}, Jan Oblak \savedOblak{} and Nick Pope \savedPope{}. De Gea prevented \preventedGea{} estimated goals and Oblak \preventedOblak{}, but their points saved are similar because Oblak's shot outcomes carried greater stakes per goal prevented.
 
 \begin{table}[tb]
 \centering
@@ -182,7 +178,7 @@ Player & Position & Team & VAEP rank & CPI rank \\
 
 
 
-\textbf{The biggest moments.} Late winners are the most valuable actions and late own goals the most costly (Table~\ref{tab:moments}). Barcelona won La Liga by \marginBarca{} points; Messi contributed \paaBarca{} points above the position-mean rate over his minutes. Lille stayed up by \marginLille{} point, with Nicolas P\'ep\'e \paaLille{} points above his position benchmark. These comparisons are descriptive, not replacement-player counterfactuals.
+\textbf{The Biggest Moments.} Late winners are the most valuable actions and late own goals the most costly (Table~\ref{tab:moments}). Barcelona won La Liga by \marginBarca{} points; Messi contributed \paaBarca{} points above the position-mean rate over his minutes. Lille stayed up by \marginLille{} point, with Nicolas P\'ep\'e \paaLille{} points above his position benchmark. These comparisons are descriptive, not replacement-player counterfactuals.
 
 \begin{table}[tb]
 \centering
@@ -271,7 +267,7 @@ For season evaluation, reporting CPI beside unweighted VAEP and uncertainty inte
 
 \textbf{Conclusion.} CPI places attacking, defensive and goalkeeper contributions on a common league-points scale. It explains who delivered when results were at stake, including lead protectors, and connects individual actions to the consequences of the match situation. Its practical value is to complement standard ratings with an account of decisive delivery. Predictive and decision-making benefits require prospective testing.
 
-\medskip\noindent\textbf{Code and data.} \url{https://github.com/ShahidAhmed7/clutch-cpi-soccer}. Numerical findings and tables are generated from the pipeline's results files.
+\medskip\noindent\textbf{Code and Data.} \url{https://github.com/ShahidAhmed7/clutch-cpi-soccer}. Numerical findings and tables are generated from the pipeline's results files.
 
 \appendix
 \section{Data and Checks}
@@ -300,21 +296,21 @@ League & Actions & AUC & Brier & ECE & Trees & AUC & Brier & ECE & Trees \\
 \end{tabular}
 \end{table}
 
-\textbf{Worked example 1: a late winner.} In \exAMatch{} (\exAScore{}, minute \exAMinute{}), \exAPlayer{} scores. The previous state, read from his team's side, gives $P_s=\exAPrevPs$ and $P_c=\exAPrevPc$; after the shot $P_s=\exAPs$ and $P_c=\exAPc$. So $\Delta P_s=\exAdPs$ and $\Delta P_c=\exAdPc$. At \exAScore{} so late, $\Lp=\exALp$ and $\Lm=\exALm$, giving $V=\exAdPs\times\exALp-(\exAdPc)\times\exALm=\exAV$ league points, against a VAEP value of \exAVaep{}.
+\textbf{Worked Example 1: A Late Winner.} In \exAMatch{} (\exAScore{}, minute \exAMinute{}), \exAPlayer{} scores. The previous state, read from his team's side, gives $P_s=\exAPrevPs$ and $P_c=\exAPrevPc$; after the shot $P_s=\exAPs$ and $P_c=\exAPc$. So $\Delta P_s=\exAdPs$ and $\Delta P_c=\exAdPc$. At \exAScore{} so late, $\Lp=\exALp$ and $\Lm=\exALm$, giving $V=\exAdPs\times\exALp-(\exAdPc)\times\exALm=\exAV$ league points, against a VAEP value of \exAVaep{}.
 
-\textbf{Worked example 2: a lead-protecting clearance.} In \exBMatch{} (\exBScore{}, minute \exBMinute{}), \exBPlayer{} clears. Possession had changed, so the previous state's opponent scoring probability $\exBPrevPc$ becomes his team's conceding probability; after the clearance $P_c=\exBPc$. Thus $\Delta P_c=\exBdPc$ and $\Delta P_s=\exBdPs$. With a late one-goal lead, $\Lp=\exBLp$ and $\Lm=\exBLm$, giving $V=(\exBdPs)\times\exBLp-(\exBdPc)\times\exBLm=\exBV$ league points. The high cost of conceding gives substantial credit to the reduced conceding probability; the unweighted VAEP value is \exBVaep{}.
+\textbf{Worked Example 2: A Lead-Protecting Clearance.} In \exBMatch{} (\exBScore{}, minute \exBMinute{}), \exBPlayer{} clears. Possession had changed, so the previous state's opponent scoring probability $\exBPrevPc$ becomes his team's conceding probability; after the clearance $P_c=\exBPc$. Thus $\Delta P_c=\exBdPc$ and $\Delta P_s=\exBdPs$. With a late one-goal lead, $\Lp=\exBLp$ and $\Lm=\exBLm$, giving $V=(\exBdPs)\times\exBLp-(\exBdPc)\times\exBLm=\exBV$ league points. The high cost of conceding gives substantial credit to the reduced conceding probability; the unweighted VAEP value is \exBVaep{}.
 
 \section{Outcome Model and Stakes}
 \label{app:stakes}
 \textbf{Model.} With $\mathbf z=(g,n,n^2,h)$, $f(\mathbf z)=\sigma(\beta_0+\beta_g g+\beta_n n+\beta_{nn}n^2+\beta_h h)$ is fitted by $\ell_2$-regularised logistic regression on the team-by-frame panel ($C=1$, standardised inputs). On the fold that holds out England, in raw units, $\beta_0=\lrBzero$, $\beta_g=\lrBg$, $\beta_n=\lrBn$, $\beta_{nn}=\lrBnn$, $\beta_h=\lrBh$. Table~\ref{tab:specs} compares richer forms on held-out leagues; a rule fixed in advance kept the simplest unless another improved the ranked probability score by more than 0.5\%.
 
-\textbf{Outcome probabilities.} With rates $\theta^+$ and $\theta^-$ for the team and its opponent, future goals $U\sim\mathrm{Bin}(n,\theta^+)$ and $D\sim\mathrm{Bin}(n,\theta^-)$ are independent, and
+\textbf{Outcome Probabilities.} With rates $\theta^+$ and $\theta^-$ for the team and its opponent, future goals $U\sim\mathrm{Bin}(n,\theta^+)$ and $D\sim\mathrm{Bin}(n,\theta^-)$ are independent, and
 \begin{equation}
 P(\mathrm{win}\mid g)=\sum_{u=0}^{M}\sum_{d=0}^{M}b(u;n,\theta^+)\,b(d;n,\theta^-)\,\mathbf 1[g+u-d>0],
 \end{equation}
 with $M=6$ and $P(\mathrm{draw}\mid g)$ given by $\mathbf 1[g+u-d=0]$. Since $P(\mathrm{win}\mid g+1)=P(\mathrm{win}\mid g)+P(\mathrm{draw}\mid g)$ under these assumptions, $\Lp(g)=2P(\mathrm{draw}\mid g)+P(\mathrm{draw}\mid g+1)$ and $\Lm(g)=2P(\mathrm{draw}\mid g-1)+P(\mathrm{draw}\mid g)$; the computed values match these forms to machine precision.
 
-\textbf{Worked example 3: one goal up at home in the 85th minute.} Then $n=\wxN$ frames remain; $f=\wxFt$ for the home team and $\wxFo$ for the visitors, so $\theta^+=\wxTt$ and $\theta^-=\wxTo$ per frame. Convolution gives $P(\mathrm{win})=\wxWin$ and $P(\mathrm{draw})=\wxDraw$, so $W(1)=\wxW$; with the same rates $W(2)=\wxWup$ and $W(0)=\wxWdown$. Hence $\Lp=\wxLp$ and $\Lm=\wxLm$: conceding would cost about seven times what scoring would gain.
+\textbf{Worked Example 3: One Goal Up at Home in the 85th Minute.} Then $n=\wxN$ frames remain; $f=\wxFt$ for the home team and $\wxFo$ for the visitors, so $\theta^+=\wxTt$ and $\theta^-=\wxTo$ per frame. Convolution gives $P(\mathrm{win})=\wxWin$ and $P(\mathrm{draw})=\wxDraw$, so $W(1)=\wxW$; with the same rates $W(2)=\wxWup$ and $W(0)=\wxWdown$. Hence $\Lp=\wxLp$ and $\Lm=\wxLm$: conceding would cost about seven times what scoring would gain.
 
 \begin{table}[tb]
 \centering
@@ -332,9 +328,9 @@ Form & Log loss & AUC & RPS & MAE \\
 
 \section{Keepers, Uncertainty and Stability}
 \label{app:uncertainty}
-\textbf{Post-shot model.} Gradient-boosted trees (200 iterations, depth 4, learning rate 0.05) on the \psxgShots{} on-target shots, with start location, distance, angle, header flag, shot type and goal-mouth zone (nine zones from Wyscout tags 1201--1209), trained leave-one-league-out: AUC \psxgAuc{}, Brier \psxgBrier{}, \psxgPred{} goals predicted against \psxgGoals{} scored.
+\textbf{Post-Shot Model.} Gradient-boosted trees (200 iterations, depth 4, learning rate 0.05) on the \psxgShots{} on-target shots, with start location, distance, angle, header flag, shot type and goal-mouth zone (nine zones from Wyscout tags 1201--1209), trained leave-one-league-out: AUC \psxgAuc{}, Brier \psxgBrier{}, \psxgPred{} goals predicted against \psxgGoals{} scored.
 
-\textbf{Intervals and shrinkage.} We resample matches 1,000 times, recomputing per-90 ratings with predictions fixed. Within position, ratings $x_p$ and bootstrap variances $s_p^2$ give $\tau^2=\max(\mathrm{Var}(x)-\overline{s^2},10^{-9})$. The target $\mu$ averages $x_p$ with weights $1/(\tau^2+s_p^2)$. With $w_p=\tau^2/(\tau^2+s_p^2)$, top-10 probabilities use 20,000 draws from $\mathcal N(w_px_p+(1-w_p)\mu,\,w_ps_p^2)$.
+\textbf{Intervals and Shrinkage.} We resample matches 1,000 times, recomputing per-90 ratings with predictions fixed. Within position, ratings $x_p$ and bootstrap variances $s_p^2$ give $\tau^2=\max(\mathrm{Var}(x)-\overline{s^2},10^{-9})$. The target $\mu$ averages $x_p$ with weights $1/(\tau^2+s_p^2)$. With $w_p=\tau^2/(\tau^2+s_p^2)$, top-10 probabilities use 20,000 draws from $\mathcal N(w_px_p+(1-w_p)\mu,\,w_ps_p^2)$.
 
 \textbf{Stability.} Split-half reliability uses Spearman rank correlations between odd- and even-gameweek ratings (at least 450 minutes in each half), with the Spearman--Brown correction $2\rho/(1+\rho)$. Discrimination is $1-\overline{s^2}/\mathrm{Var}(x)$~\cite{franks2016}. CPI is less repeatable than unweighted VAEP in every position in this sample (Table~\ref{tab:trust}).
 
@@ -374,11 +370,11 @@ The authors have no competing interests to declare that are relevant to the cont
 \begin{thebibliography}{10}
 \bibitem{decroos2019} Decroos, T., Bransen, L., Van Haaren, J., Davis, J.: Actions speak louder than goals: valuing player actions in soccer. In: Proc. 25th ACM SIGKDD, pp. 1851--1861 (2019). \doi{10.1145/3292500.3330758}
 \bibitem{bransen2019} Bransen, L., Robberechts, P., Van Haaren, J., Davis, J.: Choke or shine? Quantifying soccer players' abilities to perform under mental pressure. In: MIT Sloan Sports Analytics Conference (2019)
-\bibitem{socceraction} Decroos, T., et al.: socceraction, version 1.5.3. \url{https://github.com/ML-KULeuven/socceraction}
+\bibitem{socceraction} Decroos, T., et al.: socceraction, version 1.5.3. \url{https://github.com/ML-KULeuven/socceraction}, last accessed 2026/11/13
 \bibitem{otten2009} Otten, M.: Choking vs. clutch performance: a study of sport performance under pressure. J. Sport Exerc. Psychol. \textbf{31}(5), 583--601 (2009). \doi{10.1123/jsep.31.5.583}
 \bibitem{swann2017} Swann, C., Crust, L., Jackman, P., Vella, S.A., Allen, M.S., Keegan, R.: Performing under pressure: exploring the psychological state underlying clutch performance in sport. J. Sports Sci. \textbf{35}(23), 2272--2280 (2017). \doi{10.1080/02640414.2016.1265661}
 \bibitem{kharrat2020} Kharrat, T., McHale, I.G., L\'opez Pe\~na, J.: Plus--minus player ratings for soccer. Eur. J. Oper. Res. \textbf{283}(2), 726--736 (2020). \doi{10.1016/j.ejor.2019.11.026}
-\bibitem{robberechts2021} Robberechts, P., Van Haaren, J., Davis, J.: A Bayesian approach to in-game win probability in soccer. In: Proc. 27th ACM SIGKDD (2021). \url{https://arxiv.org/abs/1906.05029}
+\bibitem{robberechts2021} Robberechts, P., Van Haaren, J., Davis, J.: A Bayesian approach to in-game win probability in soccer. In: Proc. 27th ACM SIGKDD, pp. 3512--3521 (2021). \doi{10.1145/3447548.3467194}
 \bibitem{deshpande2016} Deshpande, S.K., Jensen, S.T.: Estimating an NBA player's impact on his team's chances of winning. J. Quant. Anal. Sports \textbf{12}(2), 51--72 (2016). \doi{10.1515/jqas-2015-0027}
 \bibitem{franks2016} Franks, A., D'Amour, A., Cervone, D., Bornn, L.: Meta-analytics: tools for understanding the statistical properties of sports metrics. J. Quant. Anal. Sports \textbf{12}(4), 151--165 (2016). \doi{10.1515/jqas-2016-0098}
 \bibitem{brill2025} Brill, R.S., Yurko, R., Wyner, A.J.: Exploring the difficulty of estimating win probability: a simulation study. J. Quant. Anal. Sports \textbf{22}(1), 105--115 (2025). \doi{10.1515/jqas-2024-0130}
