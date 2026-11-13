@@ -1,0 +1,9 @@
+name,team,match,minute,score,type_name,result_name,L_plus,L_minus,dP_scores,dP_concedes,V
+J. Alonso,Lille,"Lille - Toulouse, 1 - 0",92.0,1-0,clearance,fail,0.16637322,1.6293478,-0.016517285,-0.40883413,0.666133
+S. Mignolet,Liverpool,"Watford - Liverpool, 3 - 3",93.0,3-2,interception,success,0.23079753,1.6622881,0.00022747833,-0.29401207,0.48873276
+Javi García,Real Betis,"Sevilla - Real Betis, 3 - 5",90.0,4-3,clearance,success,0.22932136,1.6716883,0.0094124945,-0.22091846,0.3693068
+D. Siovas,Leganés,"Las Palmas - Leganés, 0 - 2",93.0,1-0,tackle,fail,0.22932136,1.6716883,-0.00055157044,-0.2073685,0.3466555
+J. Pickford,Everton,"Everton - Watford, 3 - 2",99.0,3-2,interception,success,0.17664658,1.6250262,0.0038769217,-0.195016,0.3169061
+S. Arfield,Burnley,"Chelsea - Burnley, 2 - 3",94.0,3-2,clearance,fail,0.23079753,1.6622881,-0.0014762424,-0.1852335,0.30791146
+A. Fernández,Atlético Madrid,"Eibar - Atlético Madrid, 0 - 1",91.0,1-0,interception,success,0.22932136,1.6716883,0.0025322684,-0.1771146,0.2960804
+C. Lykogiannis,Cagliari,"Fiorentina - Cagliari, 0 - 1",83.0,1-0,clearance,fail,0.30992377,1.5365,-0.00059900596,-0.17955495,0.27588618

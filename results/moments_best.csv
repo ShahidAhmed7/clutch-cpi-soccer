@@ -1,0 +1,16 @@
+name,team,match,minute,score,type_name,result_name,L_plus,L_minus,dP_scores,dP_concedes,V
+Thomas,Atlético Madrid,"Deportivo La Coruña - Atlético Madrid, 0 - 1",91.0,0-0,shot_freekick,success,1.6814545,0.9673486,0.9884025,0.0028251263,1.6592209
+M. Sylla,Monaco,"Caen - Monaco, 1 - 2",91.0,1-1,shot,success,1.6844698,0.96185726,0.9797802,-0.004678453,1.6549102
+B. Srarfi,Nice,"Toulouse - Nice, 1 - 2",91.0,1-1,shot,success,1.6844698,0.96185726,0.9816028,-0.0005589025,1.6540179
+M. Destro,Bologna,"Chievo - Bologna, 2 - 3",90.0,2-2,shot,success,1.6795174,0.9609146,0.983509,0.00027298136,1.6515582
+Y. N'Gbakoto,Guingamp,"Rennes - Guingamp, 0 - 1",91.0,0-0,shot,success,1.6844698,0.96185726,0.97429156,-0.0016690595,1.6427702
+M. Depay,Olympique Lyonnais,"Olympique Marseille - Olympique Lyonnais, 2 - 3",89.0,2-2,shot,success,1.6844698,0.96185726,0.9740993,0.00023904676,1.6406109
+N. Matić,Manchester United,"Crystal Palace - Manchester United, 2 - 3",91.0,2-2,shot,success,1.6727618,0.97043633,0.9764817,-0.0045797094,1.6378657
+K. Toko Ekambi,Angers,"Lille - Angers SCO, 1 - 2",89.0,1-1,shot,success,1.6640351,0.9542671,0.9787448,-0.0022451582,1.6308081
+D. Liénard,Strasbourg,"Strasbourg - Olympique Lyonnais, 3 - 2",93.0,2-2,shot_freekick,success,1.646327,1.0381428,0.9824108,0.0045505213,1.6126453
+N. Fekir,Olympique Lyonnais,"Olympique Lyonnais - Monaco, 3 - 2",95.0,2-2,shot_freekick,success,1.646327,1.0381428,0.9803436,0.0025484338,1.6113205
+D. Laxalt,Genoa,"Chievo - Genoa, 0 - 1",90.0,0-0,shot,success,1.6795174,0.9609146,0.9587703,0.0014681236,1.6088606
+G. Sio,Montpellier,"Montpellier - Toulouse, 2 - 1",95.0,1-1,shot,success,1.646327,1.0381428,0.96602225,-0.0043913187,1.5949473
+É. Didot,Guingamp,"Guingamp - Lille, 1 - 0",92.0,0-0,shot,success,1.646327,1.0381428,0.96779704,-0.0007008761,1.5940381
+C. Akolo,Stuttgart,"Stuttgart - Köln, 2 - 1",93.0,1-1,shot,success,1.6460363,1.0357181,0.96661645,0.0011236654,1.589922
+Y. Sanogo,Toulouse,"Toulouse - Strasbourg, 2 - 2",91.0,1-1,shot,success,1.646327,1.0381428,0.9628541,-0.00223439,1.5874922

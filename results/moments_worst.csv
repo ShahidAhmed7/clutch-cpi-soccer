@@ -1,0 +1,16 @@
+name,team,match,minute,score,type_name,result_name,L_plus,L_minus,dP_scores,dP_concedes,V
+S. Yago,Toulouse,"Toulouse - Strasbourg, 2 - 2",94.0,2-1,bad_touch,owngoal,0.16637322,1.6293478,-0.00652492,0.96264493,-1.5695689
+K. Vogt,Hoffenheim,"Hoffenheim - Augsburg, 2 - 2",89.0,2-1,bad_touch,owngoal,0.17127909,1.6060432,-0.0028574509,0.9476193,-1.522407
+M. Škriniar,Internazionale,"Internazionale - Juventus, 2 - 3",87.0,2-1,bad_touch,owngoal,0.18551947,1.5667119,-0.0017909212,0.9668288,-1.5150745
+M. Batshuayi,Chelsea,"Tottenham Hotspur - Chelsea, 1 - 2",81.0,1-0,bad_touch,owngoal,0.30641484,1.5130643,-0.0014554423,0.96744573,-1.4642535
+K. Darlow,Newcastle United,"Newcastle United - Burnley, 1 - 1",84.0,1-0,bad_touch,owngoal,0.21564505,1.5201343,-0.0018653565,0.94775045,-1.4411103
+M. Debuchy,Saint-Étienne,"Saint-Étienne - PSG, 1 - 1",92.0,1-0,bad_touch,owngoal,0.16637322,1.6293478,-0.0008217143,0.8779383,-1.4306035
+J. Evans,West Bromwich Albion,"West Bromwich Albion - Newcastle United, 2 - 2",82.0,2-1,bad_touch,owngoal,0.22961728,1.485695,-0.0036859536,0.9523268,-1.4157135
+I. Traoré,Angers,"Nice - Angers SCO, 2 - 2",76.0,2-1,bad_touch,owngoal,0.37324983,1.4266722,-7.1902294e-05,0.98165476,-1.4005264
+A. Laporte,Athletic Club,"Levante - Athletic Club, 1 - 2",72.0,1-0,bad_touch,owngoal,0.394824,1.3546749,-0.0010944665,0.96550405,-1.3083763
+N. Süle,Bayern München,"Bayern München - Werder Bremen, 4 - 2",73.0,2-1,bad_touch,owngoal,0.2829896,1.3075472,-0.0020920828,0.972576,-1.272281
+J. Butland,Stoke City,"Leicester City - Stoke City, 1 - 1",70.0,1-0,bad_touch,owngoal,0.41306016,1.3001733,-0.0015763906,0.97464806,-1.2678624
+Rogério,Sassuolo,"Sassuolo - Napoli, 1 - 1",80.0,1-0,bad_touch,owngoal,0.2398188,1.4249153,-0.00014828285,0.88440424,-1.2602366
+F. Vázquez,Sevilla,"Girona - Sevilla, 0 - 1",89.0,1-0,foul,yellow_card,0.22932136,1.6716883,-0.0014136692,0.7371008,-1.2325269
+S. Handanovič,Internazionale,"Internazionale - Milan, 3 - 2",80.0,2-1,bad_touch,owngoal,0.2398188,1.4249153,-0.002836743,0.83929193,-1.1966002
+S. Mustafi,Arsenal,"West Bromwich Albion - Arsenal, 1 - 1",87.0,1-0,foul,fail,0.25319275,1.6097338,-0.002935858,0.6841409,-1.1020281
