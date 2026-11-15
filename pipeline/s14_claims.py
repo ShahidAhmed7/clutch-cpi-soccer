@@ -17,6 +17,8 @@ R, P = C.RESULTS, C.ROOT / 'paper'
 N = {}
 f1, f2, f3 = (lambda x: f'{x:.1f}'), (lambda x: f'{x:.2f}'), (lambda x: f'{x:.3f}')
 nz = lambda x: f2(x).replace('0.', '.', 1) if abs(x) < 1 and x >= 0 else f2(x).replace('-0.', '$-$.', 1) if abs(x) < 1 else f2(x)
+# Leading zero for values that can exceed 1 (league points, CPI); nz is for correlations, AUC and reliability.
+lead0 = lambda x: f2(x).replace('-', '$-$', 1)
 
 
 def latex_accents(text):
@@ -53,7 +55,7 @@ def main():
     t2 = val['t2']
     N['nCells'] = str(t2['cells'])
     a = t2['L_minus_vs_real_cost']
-    N['rhoCost'], N['rhoCostLow'], N['rhoCostHigh'], N['maeCost'], N['slopeCost'] = nz(a['spearman']), nz(a['ci_low']), nz(a['ci_high']), nz(a['mae']), nz(a['slope'])
+    N['rhoCost'], N['rhoCostLow'], N['rhoCostHigh'], N['maeCost'], N['slopeCost'] = nz(a['spearman']), nz(a['ci_low']), nz(a['ci_high']), lead0(a['mae']), nz(a['slope'])
     b = t2['L_plus_vs_real_gain']
     N['rhoGain'], N['maeGain'] = nz(b['spearman']), nz(b['mae'])
     c = t2['total_vs_real_total']; d = t2['scoring_only_vs_real_total']
@@ -71,7 +73,7 @@ def main():
 
     t3 = val['t3']
     N['ledgerMatchSlope'], N['ledgerMatchR'] = f2(t3['match']['net_V']['slope']), nz(t3['match']['net_V']['pearson'])
-    N['ledgerSeasonSlope'], N['ledgerSeasonR'] = f2(t3['season']['net_V']['slope']), f3(t3['season']['net_V']['pearson']).lstrip('0')
+    N['ledgerSeasonSlope'], N['ledgerSeasonR'] = f2(t3['season']['net_V']['slope']), f2(t3['season']['net_V']['pearson']).lstrip('0')
     N['ledgerSeasonRGd'], N['ledgerSeasonRVaep'] = f3(t3['season']['gd']['pearson']).lstrip('0'), f3(t3['season']['net_value']['pearson']).lstrip('0')
     N['ledgerMatchRGd'], N['ledgerMatchRVaep'] = nz(t3['match']['gd']['pearson']), nz(t3['match']['net_value']['pearson'])
     N['ledgerTeams'] = str(t3['team_seasons'])
@@ -88,7 +90,7 @@ def main():
         N[f'meanCPI{b_}'] = nz(pos[a_])
     named = lambda s: q[q['name'] == s].iloc[0]
     me = named('L. Messi')
-    N['messiCPI'], N['messiLow'], N['messiHigh'], N['messiTotal'] = nz(me['CPI']), nz(me['ci_low']), nz(me['ci_high']), f1(me['V'])
+    N['messiCPI'], N['messiLow'], N['messiHigh'], N['messiTotal'] = lead0(me['CPI']), lead0(me['ci_low']), lead0(me['ci_high']), f1(me['V'])
     rel = pd.read_csv(R / 'reliability.csv').set_index('position')
     dis = pd.read_csv(R / 'discrimination.csv').set_index('position')
     dec = pd.read_csv(R / 'decomposition.csv').set_index('position')
@@ -109,6 +111,16 @@ def main():
             rows.append(f"{lab if i == 0 else ''} & {r.name} & {nz(r.CPI)} ({nz(r.ci_low)}, {nz(r.ci_high)}) & {f1(r.V)} & {nz(r.CPI_shrunk)} & {r.P_top10 * 100:.0f}\\% & {int(r.rank_vaep)} \\\\")
         rows.append('\\midrule')
     (P / 'tables' / 'leaders.tex').write_text('\n'.join(rows[:-1]))
+
+    profiles, adjusted_profiles, profiles_full = [], [], []
+    for p_, lab in (('forward', 'Forward'), ('midfielder', 'Midfielder'), ('defender', 'Defender'), ('goalkeeper', 'Goalkeeper')):
+        r = q[q['position'] == p_].nsmallest(1, 'rank').iloc[0]
+        profiles.append(f"{lab} & {r['name']} & {nz(r['CPI'])} ({nz(r['ci_low'])}, {nz(r['ci_high'])}) \\\\")
+        adjusted_profiles.append(f"{r['name']} & {nz(r['CPI_shrunk'])} & {r['P_top10'] * 100:.0f}\\% & {int(r['rank_vaep'])} \\\\")
+        profiles_full.append(f"{lab} & {r['name']} & {lead0(r['CPI'])} ({lead0(r['ci_low'])}, {lead0(r['ci_high'])}) & {lead0(r['CPI_shrunk'])} & {r['P_top10'] * 100:.0f}\\% \\\\")
+    (P / 'tables' / 'profiles.tex').write_text('\n'.join(profiles))
+    (P / 'tables' / 'adjusted_profiles.tex').write_text('\n'.join(adjusted_profiles))
+    (P / 'tables' / 'profiles_full.tex').write_text('\n'.join(profiles_full))
 
     summary = json.loads((R / 'ratings_summary.json').read_text())['rank_correlation']
     for a_, b_ in (('forward', 'F'), ('midfielder', 'M'), ('defender', 'D'), ('goalkeeper', 'G')):
@@ -176,6 +188,7 @@ def main():
         rows.append(f"{lab}: scoring side & {ci(h['est'], h['se'], sc)} & -- \\\\")
         rows.append(f"{lab}: conceding side & {ci(s_['est'], s_['se'], sc)} & -- \\\\")
     (P / 'tables' / 'pressure.tex').write_text('\n'.join(rows))
+    (P / 'tables' / 'pressure_primary.tex').write_text('\n'.join(rows[:3]))
 
     # Q2
     co = pd.read_csv(R / 'q2_coaches.csv')
@@ -190,6 +203,23 @@ def main():
     u, dn = rp.loc['protecting, goal prevention'], rp.loc['chasing, attacking']
     N['pickUp'], N['pickUpChance'], N['pickDown'], N['pickDownChance'] = f1(u['picked_best'] * 100), f1(u['chance'] * 100), f1(dn['picked_best'] * 100), f1(dn['chance'] * 100)
     N['pickUpN'], N['pickDownN'] = str(int(u['decisions'])), str(int(dn['decisions']))
+    # plain-language versions for the main text: lower odds in percent, bench picks rounded
+    for key in ('OffUpDef', 'OffDownAtt'):
+        r = get(*{'OffUpDef': ('taken_off', 'protecting', 'z_defend'), 'OffDownAtt': ('taken_off', 'chasing', 'z_attack')}[key])
+        N[f'pct{key}'] = f"{round((1 - np.exp(r['log_odds'])) * 100):.0f}"
+    N['pickUpR'], N['pickUpChanceR'] = f"{round(u['picked_best'] * 100):.0f}", f"{round(u['chance'] * 100):.0f}"
+    N['pickDownR'], N['pickDownChanceR'] = f"{round(dn['picked_best'] * 100):.0f}", f"{round(dn['chance'] * 100):.0f}"
+    # change in each channel's odds ratio from chasing to protecting (match bootstrap, 500 draws)
+    sw = co[co['state'] == 'protecting_minus_chasing']
+    lab, chn = {'taken_off': 'Taken off', 'brought_on': 'Brought on'}, {'z_defend': 'Goal prevention', 'z_attack': 'Attacking'}
+    ptxt = lambda q: '$<$.004' if q == 0 else f'{q:.3f}'.replace('0.', '.', 1)
+    rows_sw = []
+    for d_ in ('taken_off', 'brought_on'):
+        for t in ('z_defend', 'z_attack'):
+            r = sw[(sw['decision'] == d_) & (sw['term'] == t)].iloc[0]
+            rows_sw.append(f"{lab[d_]} & {chn[t]} & {f2(np.exp(r['log_odds']))} ({f2(np.exp(r['ci_low']))}, {f2(np.exp(r['ci_high']))}) & {ptxt(r['p'])} \\\\")
+    (P / 'tables' / 'swap.tex').write_text('\n'.join(rows_sw))
+    N['swapPMax'] = f"{sw['p'].max():.3f}".replace('0.', '.', 1)
 
     # sensitivity and data choices, once available
     if (R / 'sensitivity.csv').exists():
@@ -197,15 +227,16 @@ def main():
         rows = [f"{r.comparison} & {nz(r.rho_forward)} & {nz(r.rho_midfielder)} & {nz(r.rho_defender)} & {nz(r.rho_goalkeeper)} & {r.top10_forward}, {r.top10_midfielder}, {r.top10_defender}, {r.top10_goalkeeper} \\\\" for r in sens.itertuples()]
         (P / 'tables' / 'sensitivity.tex').write_text('\n'.join(rows))
     dc = pd.read_csv(R / 'data_choices.csv').set_index('choice')
-    names = {'mirrored_coordinates': 'Away actions left mirrored', 'no_set_piece_baselines': 'No penalty, corner baselines'}
+    names = {'mirrored_coordinates': 'Away actions left mirrored', 'no_set_piece_baselines': 'No set-piece adjustments'}
     rows = []
     for k_, lab in names.items():
         r = dc.loc[k_]
         rows.append(f"{lab} & {nz(r.rho_forward)} & {nz(r.rho_midfielder)} & {nz(r.rho_defender)} & {nz(r.rho_goalkeeper)} & {int(r.top10_forward)}, {int(r.top10_midfielder)}, {int(r.top10_defender)}, {int(r.top10_goalkeeper)} \\\\")
     (P / 'tables' / 'choices.tex').write_text('\n'.join(rows))
+    N['choiceRhoMin'] = nz(dc.loc[list(names), ['rho_forward', 'rho_midfielder', 'rho_defender', 'rho_goalkeeper']].values.min())
     N['mirrorAuc'], N['baseAuc'] = nz(dc.loc['mirrored_coordinates', 'auc_scores']), nz(dc.loc['method', 'auc_scores'])
-    N['mirrorKeeper'], N['baseKeeper'] = nz(dc.loc['mirrored_coordinates', 'mean_goalkeeper']), nz(dc.loc['method', 'mean_goalkeeper'])
-    N['baseForward'], N['noBaseForward'] = nz(dc.loc['method', 'mean_forward']), nz(dc.loc['no_set_piece_baselines', 'mean_forward'])
+    N['mirrorKeeper'], N['baseKeeper'] = lead0(dc.loc['mirrored_coordinates', 'mean_goalkeeper']), lead0(dc.loc['method', 'mean_goalkeeper'])
+    N['baseForward'], N['noBaseForward'] = lead0(dc.loc['method', 'mean_forward']), lead0(dc.loc['no_set_piece_baselines', 'mean_forward'])
     N['noBaseTopMid'] = str(int(dc.loc['no_set_piece_baselines', 'top10_midfielder']))
     sens = pd.read_csv(R / 'sensitivity.csv')
     rho_cols = [f'rho_{p_}' for p_ in C.POSITIONS]
@@ -219,7 +250,8 @@ def main():
     if extra.exists():
         N.update(json.loads(extra.read_text()))
     tables = {'tabLeaders': 'leaders', 'tabMoments': 'moments', 'tabPressure': 'pressure', 'tabSensitivity': 'sensitivity', 'tabChoices': 'choices',
-              'tabGoalValues': 'goal_values', 'tabMovers': 'movers', 'tabCase': 'case', 'tabFolds': 'folds', 'tabStakeSpecs': 'stake_specs'}
+              'tabGoalValues': 'goal_values', 'tabMovers': 'movers', 'tabCase': 'case', 'tabFolds': 'folds', 'tabStakeSpecs': 'stake_specs',
+              'tabProfiles': 'profiles', 'tabPressurePrimary': 'pressure_primary', 'tabAdjustedProfiles': 'adjusted_profiles', 'tabSwap': 'swap', 'tabProfilesFull': 'profiles_full'}
     macros = [f'\\newcommand{{\\{k_}}}{{{v_}}}' for k_, v_ in N.items()]
     for mac, name in tables.items():
         path = P / 'tables' / f'{name}.tex'

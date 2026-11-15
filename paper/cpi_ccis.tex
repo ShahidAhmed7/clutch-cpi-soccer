@@ -6,13 +6,21 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
+\usepackage{placeins}
 \usepackage{booktabs}
 \usepackage{marvosym}
-\usepackage{xurl}
+\usepackage{url}
 \usepackage[hidelinks]{hyperref}
 \usepackage{color}
 \renewcommand\UrlFont{\color{blue}\rmfamily}
 \urlstyle{rm}
+% Keep words whole at line endings throughout the paper, including references.
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\emergencystretch=3em
+% Allow URL wrapping at separators, never in the middle of a name or word.
+\def\UrlBreaks{\do\/\do\:}
+\def\UrlBigBreaks{\do\/\do\:}
 \input{numbers.tex}
 \newcommand{\Lp}{L^{+}}
 \newcommand{\Lm}{L^{-}}
@@ -30,116 +38,143 @@ Tarvir Anjum Aditto}
 \maketitle
 
 \begin{abstract}
-Clutch performance in soccer means delivering when the match result is at stake, such as scoring a late winner. Standard action-value models measure changes in scoring and conceding probabilities but do not price the consequences of the next goal. A prior in-game pressure measure considers only the gain from scoring. We introduce the Clutch Performance Index (CPI), which weights each action's scoring and conceding contributions by two stakes in expected league points: the gain from scoring and the cost of conceding. Using \nActions{} actions from the five major European leagues in 2017/18, we find that these stakes closely match estimates from observed final results. For one-goal leads after the 80th minute, the estimated cost of conceding is \realCost{} points, compared with a gain of \realGain{} from scoring. Season net clutch value tracks league points with slope \ledgerSeasonSlope{} and correlation \ledgerSeasonR{}; an explicit shot-stopping term includes goalkeepers. Within-player comparisons associate high stakes with lower pass completion, greater forward progress and lower unweighted action value. Coaches tend to retain players with higher goal-prevention ratings when leading and higher attacking ratings when trailing, but neither rating has a detectable association with bringing players on to protect a lead. CPI describes contributions delivered in a season rather than establishing a stable clutch trait.
+Clutch performance in soccer means delivering when the match result is at stake, such as scoring a late winner or making a clearance to protect a narrow lead. Measuring it requires accounting for both action quality and match context. Existing action-value models estimate changes in scoring and conceding probabilities without explicitly weighting their consequences for the result, while scoring-only pressure measures overlook the cost of conceding. We introduce the Clutch Performance Index (CPI), which combines these probability changes with match stakes determined by the scoreline, time remaining and home--away status. It values attacking and preventive contributions through the expected league points gained from scoring and lost through conceding. A shot-stopping component includes goalkeepers, producing player ratings per 90 minutes on a common scale. We evaluate CPI using \nActions{} actions from Europe's five major leagues in 2017/18, with models tested on held-out leagues. For one-goal leads after the 80th minute, observed outcomes imply an estimated cost of conceding of \realCost{} points, compared with a gain of only \realGain{} from scoring. CPI shows that fewer goals scored in decisive situations can carry greater value than a higher goal total accumulated at lower stakes. By also recognising clearances and saves that protect narrow leads, it gives analysts a broader basis for assessing decisive performances beyond goals and assists alone. The project repository and source code have been published online.\footnote{Project repository: \url{https://github.com/ShahidAhmed7/clutch-cpi-soccer}.}
 \keywords{Sports analytics \and Soccer \and Action valuation \and Win probability \and Clutch performance}
 \end{abstract}
 
 \section{Introduction}
-Assessing clutch performance requires connecting individual actions to the result at stake. A late winner can turn a draw into victory, while a block can protect a narrow lead. Only the goal appears in the scorer's tally. Player assessment needs to recognise who created value and who preserved it.
+\looseness=-1 A goal that extends a 4--0 lead and an 89th-minute winner both add one goal to a player's tally, but their importance to the result is very different. One adds to a comfortable victory; the other can turn one league point into three. A clearance or save that prevents a late equaliser can be equally decisive. Clutch performance means delivering when the result is at stake. Measuring it therefore requires recognising both what players contribute and when those contributions matter.
 
-VAEP (Valuing Actions by Estimating Probabilities)~\cite{decroos2019} credits changes in the near-term chances of scoring and conceding. The same probability change earns the same credit at 4--0 and at 1--1 in the 89th minute, despite the next goal's different consequences.
+\looseness=-1 VAEP (Valuing Actions by Estimating Probabilities)~\cite{decroos2019} values contributions beyond goals and assists by estimating how actions change scoring and conceding probabilities. Although its predictions account for score and time, its values do not directly express the consequences for the match result. A goal during a comfortable victory can therefore receive similar credit to a late winner, despite their different importance.
 
-Scoring and conceding can also have unequal stakes. Bransen et al.~\cite{bransen2019} measure in-game pressure through what changes if a team scores. A late one-goal lead offers little to gain from scoring but much to lose from conceding. A scoring-only weight can therefore understate the value of lead protection.
+\looseness=-1 Performance under pressure can also be examined by comparing players' contributions, decisions and execution across pressure levels. The in-game pressure measure in~\cite{bransen2019} considers how much scoring would improve a team's chances of winning or drawing. However, a team leading 1--0 late has little to gain from another goal and much to lose by conceding. Valuing decisive contributions therefore requires accounting separately for the benefit of scoring and the cost of conceding.
 
-We introduce the \textbf{Clutch Performance Index (CPI)} to weight attacking contributions by the gain from scoring and preventive contributions by the cost of conceding. Both stakes are expressed in expected league points. An explicit shot-stopping term includes goalkeepers, giving season totals and per-90 ratings on a common scale.
+\looseness=-1 We introduce the \textbf{Clutch Performance Index (CPI)} to capture both consequences. Scoreline, time remaining and home--away status determine the expected league points gained from scoring and lost through conceding. These stakes separately weight each action's changes in scoring and conceding probabilities. A shot-stopping component includes goalkeepers, and player totals are normalised per 90 minutes, placing attacking and preventive contributions on a common scale.
 
-For analysts, this makes decisive contributions comparable across roles. In our data, Gerard Moreno's \goalsMoreno{} non-penalty goals receive \gptsMoreno{} points of clutch value, compared with \gptsRonaldo{} for Cristiano Ronaldo's \goalsRonaldo{}, reflecting their different match situations. Goal volume alone misses this distinction. The same principle credits defenders and goalkeepers for preserving valuable leads. The channels let analysts review who contributed when teams chased or protected a result.
+\looseness=-1 Clutch performance often brings celebrated players such as Cristiano Ronaldo to mind. Yet the 2017/18 La Liga data challenge expectations based on reputation and scoring totals alone. Ronaldo's \goalsRonaldo{} non-penalty goals carried an estimated \gptsRonaldo{} points of clutch value, compared with \gptsMoreno{} points for Gerard Moreno's \goalsMoreno{} goals. Moreno's smaller tally produced comparable scoring value because his goals came at higher stakes, illustrating how match context changes the interpretation of goal totals.
 
-\noindent\textbf{Contributions.} (i) \textbf{Two-sided valuation:} attacking, defensive and goalkeeper contributions on a common league-points scale that accounts for the unequal stakes of scoring and conceding. (ii) \textbf{Evidence for prevention stakes:} observed results show the high cost of conceding in late leads, while aggregate values closely track season points. (iii) \textbf{Behavioural findings:} lower pass completion and greater forward progress at high stakes, and goal-prevention ratings associated with retention but not detectably with bench selection to protect leads.
+\looseness=-1 Used alongside VAEP, CPI helps analysts distinguish action quality from the stakes of its delivery and recognise decisive contributions beyond scoring. It describes delivered performance in context, while leaving persistent clutch ability as a separate question.
+
+\looseness=-1 \noindent\textbf{Contributions.} We provide (i) the \textbf{Clutch Performance Index (CPI)}, a new player rating for clutch performance in soccer; (ii) an \textbf{evaluation approach} for context-weighted ratings, which tests match stakes against observed results and aggregated player values against league tables, with uncertainty and repeatability reported; and (iii) \textbf{applications for soccer analysis}, showing how CPI supports match review, player assessment and late-game substitution decisions.
 
 \section{Related Work}
 \label{sec:related}
-\textbf{Action Values.} VAEP~\cite{decroos2019} estimates the chances of scoring and conceding within a ten-action window and credits each action with the change. We use its reference implementation~\cite{socceraction} for conversion, features and the value rule, then weight the two value channels by their respective stakes.
+\looseness=-1 Action valuation covers contributions beyond goals and assists. VAEP estimates how an action can change scoring and conceding probabilities from recent actions, score and time, then credits each action with their changes~\cite{decroos2019}. This recognises passes, dribbles and defensive actions within one framework. However, the values remain on a goal-probability scale, without explicitly weighting how those changes affect the match result. Connecting action quality to the consequences of the current situation remains necessary for measuring decisive delivery.
 
-\textbf{Pressure and Importance.} Bransen et al.~\cite{bransen2019} combine changes in win and draw probabilities if a team scores with pre-match importance. We price both scoring and conceding in league points. Sport psychology studies clutch performance as performing better than usual under pressure~\cite{otten2009,swann2017}; CPI describes stakes-weighted contributions, while our within-player analysis examines average differences across stakes.
+\looseness=-1 Outcome models connect game situations to result probabilities. Bayesian soccer models estimate win, draw and loss probabilities from evolving game conditions. Measures such as added Goal Value convert the changes accompanying goals into expected league points~\cite{robberechts2021}. Adjusted plus-minus approaches estimate player contributions from changes in win probability during basketball shifts~\cite{deshpande2016} or expected points during soccer playing spells~\cite{kharrat2020}. These approaches value goals or periods of play, but do not assign each on-ball action separate attacking and preventive values reflecting the consequences of the next goal.
 
-\textbf{Expected Points and Win Probability.} Kharrat et al.~\cite{kharrat2020} rate spells in expected points and warn against counting team strength twice; we omit it from the stakes. Robberechts et al.~\cite{robberechts2021} value soccer goals by expected points; Deshpande and Jensen~\cite{deshpande2016} rate NBA players by contributions to winning probability. We price soccer actions by both scoring and conceding stakes.
+\looseness=-1 Pressure-based analysis instead examines how performance changes across situations. Pre-match circumstances and an in-game pressure estimate are combined to compare action contribution, decision-making and execution under different pressure levels~\cite{bransen2019}. The in-game component measures how scoring would improve the team's chances of winning or drawing. It does not separately price the cost of conceding. Consequently, the small benefit of extending a lead cannot represent the importance of preventing an equaliser. A valuation of delivered contributions needs both quantities, alongside the distinction between performing in important moments and improving under pressure.
 
-\textbf{Evaluating Metrics.} Following Franks et al.~\cite{franks2016}, we assess reliability and discrimination separately. We resample whole matches, accounting for dependence among estimates sharing a game's outcome~\cite{brill2025}.
+{\hyphenpenalty=50\exhyphenpenalty=50\looseness=-1 That distinction is central to psychological research, where clutch performance concerns improved performance under pressure~\cite{otten2009,swann2017}. Experimental and interview-based studies investigate the experience and mechanisms underlying such performance. However, a substantial contribution in a high-stakes situation does not, by itself, demonstrate that a player performed better than their usual standard. Quantifying the value of delivered contributions and establishing whether players improve under pressure are therefore distinct but complementary research questions.\par}
+
+{\hyphenpenalty=50\exhyphenpenalty=50\looseness=-1 Finally, evaluating a performance rating requires evidence of its stability, discriminatory power and complementary information beyond existing metrics~\cite{franks2016}. Shared match outcomes create dependence that can inflate estimation uncertainty, and even clustered bootstrap intervals can be too narrow~\cite{brill2025}. Conventional bootstrap estimates of rank uncertainty can also be inconsistent~\cite{hall2009}. These findings motivate reporting uncertainty and repeatability alongside rankings. Within this literature, CPI connects action-level probability changes to separate scoring and conceding stakes, while maintaining the distinction between delivered clutch value and persistent clutch ability.\par}
 
 \section{Data}
 \label{sec:data}
-We use public Wyscout data for the 2017/18 top divisions of England, France, Germany, Italy and Spain~\cite{pappalardo2019}: \nMatches{} matches, \nGoals{} goals excluding own goals, and \nOwnGoals{} own goals. We chose this openly licensed five-league release for reproducible cross-league evaluation; its domestic-league coverage is limited to 2017/18, so cross-season persistence remains outside this study's scope~\cite{pappalardo2019}. The reference converter~\cite{socceraction} produces \nActions{} on-ball actions. Unattributed events remain in the sequence but receive no player credit. Automated checks verify score reconstruction (\scoreMatch\% agreement with official team-match scores), preservation of own goals, and median shot geometry for both home and away teams (Appendix~\ref{app:data}). The converter stores own goals as \texttt{bad\_touch}, while reference labels and score features identify them only on shots; we count them explicitly in scores, labels and post-goal resets.
+We use the public Wyscout event data for the 2017/18 top divisions of England, France, Germany, Italy and Spain~\cite{pappalardo2019}: \nMatches{} matches, \nGoals{} goals and \nOwnGoals{} own goals. The openly licensed release covers five leagues in one season, so a model can be trained on four leagues and tested on the fifth.
+
+The socceraction converter~\cite{socceraction} turns the raw events into \nActions{} ordered action records describing who acted, what happened, where and when. We rebuild the score before each action, including own goals, and align coordinates with the acting team's attacking direction so locations are comparable across teams.
+
+Each action is represented by \nFeatures{} features from the action itself and its two preceding actions. These describe the action, its location and movement, the recent sequence of play, and the score and time. The stakes model uses only the score, time remaining and home--away status, and the goalkeeper model uses each on-target shot's location, type and goal-mouth zone.
+
+Actions without an identified player remain in the sequence but receive no individual credit. Automated checks verify attacking direction, own-goal counts and the match clock. Reconstructed scores agree with official results for \scoreMatch\% of team-match records.
 
 \section{Method}
 \label{sec:method}
-Fig.~\ref{fig:method} links action probability changes to next-goal stakes. Models are trained on four leagues and applied to the fifth, excluding test matches from training.
+CPI combines two estimates: how an action changes the team's chances of scoring and conceding, and how much each outcome would matter to the result. Fig.~\ref{fig:method} shows these branches. Models are trained on four leagues and evaluated on the fifth, so a match is never used to train the models that value its actions.
 
-\begin{figure}[tb]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/method.pdf}
 \caption{The Clutch Performance Index. Branch A estimates probability changes; branch B estimates scoring and conceding stakes. Their weighted difference gives action value. Player totals, including goalkeeper shot-stopping, are normalised per 90 minutes.}
 \label{fig:method}
 \end{figure}
 
-\subsection{What Each Action Did}
-For action $a_i$ by team $t_i$, two labels cover the action and the next nine: $y^s_i=1$ if $t_i$ scores in that window and $y^c_i=1$ if it concedes, including own goals. Two CatBoost classifiers estimate $P_s(S_i)$ and $P_c(S_i)$ from game state $S_i$: the action and its two predecessors, in the acting team's attacking direction, plus score and time (\nFeatures{} features, Appendix~\ref{app:models}). Held-out ROC-AUC is \aucScores{} for scoring and \aucConcedes{} for conceding. We attribute to each action the changes relative to its baselines,
-\begin{equation}
-\Delta P_s(a_i)=P_s(S_i)-b^s_i,\qquad \Delta P_c(a_i)=P_c(S_i)-b^c_i ,
-\end{equation}
-The baselines use the reference rule: previous probabilities, exchanged after a change of possession; zero after a goal or a pause over 10\,s; and fixed scoring baselines for penalties and corners. The first action of each match has zero change.
+\subsection{Estimating What an Action Changes}
+\label{sec:actionchanges}
+For each action, two CatBoost models estimate the acting team's probabilities of scoring and conceding within the next 10 actions, counting the current action. The corresponding training labels capture these two outcomes separately, with own goals attributed to the opposing team. Both models use \nFeatures{} features describing the current action, its two predecessors, their locations and outcomes, and the match score and time. Evaluated on held-out leagues, the models achieve ROC-AUC scores of \aucScores{} for scoring and \aucConcedes{} for conceding.
 
-\subsection{What the Next Goal Is Worth}
-Let $g$ be goal difference, $n$ the number of 54-second frames remaining and $h$ the home indicator. Logistic function $f(g,n,h)$ with terms $g,n,n^2,h$ estimates the chance of scoring at least once more. It uses one row per team and frame, avoiding possession-frequency weighting. The opponent's chance is $f(-g,n,1-h)$, giving a shared forecast. Team strength is omitted~\cite{kharrat2020}. Each probability becomes a per-frame rate $\theta=1-(1-f)^{1/n}$; independent Binomial$(n,\theta)$ future goal counts give win and draw probabilities by convolution (Appendix~\ref{app:stakes}). Suppressing time and home status, expected points and stakes are
+Following VAEP~\cite{decroos2019}, we evaluate an action by measuring how it changes the team's probabilities of scoring and conceding between two consecutive game states. Let $P_{s,i}$ and $P_{c,i}$ represent the probabilities of scoring and conceding, respectively, after action $i$. Similarly, $P_{s,i-1}$ and $P_{c,i-1}$ represent these probabilities after the preceding action. All probabilities are considered from the perspective of the team performing action $i$. The changes are
 \begin{equation}
-W(g)=3P(\mathrm{win}\mid g)+P(\mathrm{draw}\mid g),
+\Delta P_{s,i}=P_{s,i}-P_{s,i-1},\qquad
+\Delta P_{c,i}=P_{c,i}-P_{c,i-1}.
 \end{equation}
-\begin{equation}
-\Lp(g)=W(g{+}1)-W(g),\qquad \Lm(g)=W(g)-W(g{-}1),
-\end{equation}
-holding the estimated scoring rates fixed across $g$, $g+1$ and $g-1$. This isolates the value of the score change under a common forecast.
+VAEP calls $\Delta P_{s,i}$ the action's \textit{offensive value} and $-\Delta P_{c,i}$ its \textit{defensive value}. For example, increasing the estimated scoring chance from 10\% to 15\% gives an offensive value of 0.05, a rise of five percentage points. Reducing the conceding chance gives a positive defensive value.
 
-\subsection{Clutch Value, CPI and Goalkeepers}
-An action's clutch value, in expected league points, and an outfield player's per-90 rating are
+The preceding probabilities are adjusted at changes in play, following the socceraction implementation~\cite{socceraction}. When the acting team changes, the scoring and conceding predictions from the preceding state swap roles. After a goal or a gap over 10\,s, both are set to zero. We also apply the goal reset to own goals. Penalties and corners use fixed scoring probabilities before the set piece, so takers are credited for execution rather than for obtaining the opportunity. The first action is assigned zero change, as no preceding action is available.
+
+\subsection{Measuring What the Next Goal Is Worth}
+An outcome model uses the current score, time remaining and home--away status to predict the number of goals each team is expected to score and, in turn, estimate the probabilities of winning or drawing. Following~\cite{kharrat2020}, team strength is left out: the action values already reflect player quality, so including it would count that quality twice and give players in strong teams less credit for the same action. The model specification is in Appendix~\ref{app:stakes}. Let $g$ be the team's goals minus its opponent's goals. A win earns three league points and a draw one, so expected points at the current time and home--away status are
+\begin{equation}
+W(g)=3P(\mathrm{win}\mid g)+P(\mathrm{draw}\mid g).
+\end{equation}
+We denote the expected gain from scoring by $\Lp$ and the expected cost of conceding by $\Lm$. Scoring raises the goal difference by one and conceding lowers it by one, giving
+\begin{equation}
+\Lp(g)=W(g{+}1)-W(g),\qquad
+\Lm(g)=W(g)-W(g{-}1).
+\end{equation}
+We hold time, home--away status and forecast scoring rates fixed across these scenarios to isolate the effect of the score change.
+
+\subsection{From Action Values to Player Ratings}
+We combine each action's probability changes with its pre-action stakes to obtain its clutch value, $V_i$. For player $p$, $A_p$ contains the player's actions and $\text{minutes}_p$ is the total playing time. Summing the on-ball values and scaling by playing time gives CPI per 90 minutes as below:
 \begin{equation}
 \begin{aligned}
-V(a_i)&=\Delta P_s(a_i)\,\Lp(g_i,n_i)-\Delta P_c(a_i)\,\Lm(g_i,n_i),\\
-\mathrm{CPI}_p&=\frac{90}{\text{minutes}_p}\sum_{i\in A_p}V(a_i).
+V_i&=\Delta P_{s,i}\,\Lp_i-\Delta P_{c,i}\,\Lm_i,\\
+\mathrm{CPI}_p&=\frac{90}{\text{minutes}_p}\sum_{i\in A_p}V_i.
 \end{aligned}
 \end{equation}
-Here $A_p$ contains player $p$'s actions, with stakes evaluated before each action. Scoring contributions earn credit at the gain from scoring; prevention contributions at the cost of conceding. We rank \nQualified{} players with at least 900 minutes~\cite{bransen2019}, within position.
+Thus, CPI weights VAEP's offensive value by the gain from scoring, $\Lp$, and its defensive value by the cost of conceding, $\Lm$. Reducing the conceding chance makes the second term positive and earns preventive credit. CPI expresses both contributions in league points per 90 minutes. Rankings compare \nQualified{} players with at least 900 minutes within position~\cite{bransen2019}.
 
-Standard action values do not isolate shot-stopping: the shot's state already includes its result. For goalkeepers, we replace save-event values with an explicit term over on-target shots faced,
+\subsection{Accounting for Goalkeeper Saves}
+The shot's outcome already enters the action predictions, which can leave little credit for the subsequent save event. We therefore remove save-event values from the keeper's on-ball total and add a separate shot-stopping estimate, while other actions retain their values. For each on-target shot, $x_{\text{post}}$ estimates the chance of a goal from its location, type and goal-mouth zone. The outcome $\text{goal}$ is 1 if scored and 0 otherwise. $\Lm_{\text{keeper}}$ is the cost of conceding for the keeper's team before the shot. The keeper's total points saved are described as:
 \begin{equation}
-\text{points saved}=\textstyle\sum_{\text{shots}}(x_{\text{post}}-\text{goal})\,\Lm_{\text{keeper}},
+\text{points saved}=\textstyle\sum_{\text{shots}}(x_{\text{post}}-\text{goal})\,\Lm_{\text{keeper}}.
 \end{equation}
-where $x_{\text{post}}$ is the estimated conceding probability from shot location, type and goal-mouth zone (held-out AUC \psxgAuc{}), and $\text{goal}$ indicates a goal. We add points saved to the goalkeeper's remaining values before per-90 normalisation, but exclude this term from the team ledger to avoid counting shot outcomes again.
+A save earns credit according to the shot's difficulty and the stakes, while goals conceded reduce the total. The adjusted keeper total is divided by playing time and multiplied by 90. Team-level analyses retain the original action totals and omit points saved to avoid double counting.
 
-\textbf{Uncertainty.} We resample whole matches 1,000 times~\cite{brill2025}, keeping fitted predictions fixed. We report percentile intervals and empirical-Bayes ratings shrunk towards a position mean. Top-10 probabilities come from the posterior, since bootstrap ranks can be unreliable at the extremes~\cite{hall2009} (Appendix~\ref{app:uncertainty}).
+\subsection{Reporting Uncertainty}
+We report 95\% intervals for CPI from 1,000 resamples of whole matches, keeping model predictions fixed~\cite{brill2025}. We also report adjusted ratings from an Empirical-Bayes model, which pull less certain estimates towards the position mean. Top-10 probabilities are calculated using these adjusted ratings, whereas the 95\% intervals are based on unadjusted CPI. We report these separately because conventional bootstrap methods can produce inconsistent estimates of rank uncertainty~\cite{hall2009}.
 
-\section{Do the Stakes Match Observed Results?}
+\section{Empirical Validation of CPI}
 \label{sec:stakes}
-Without using the outcome model, we regress final league points on score-state indicators after the 80th minute, adjusting for pre-match Elo difference and home advantage. We estimate the gain from scoring and cost of conceding by contrasting adjacent score states. For a one-goal lead, the estimated cost is \realCost{} points and the gain is \realGain{}, a difference of \costGainDiff{} (95\% interval \costGainLow{} to \costGainHigh{}); the outcome model gives \modelCost{} and \modelGain{}. At level scores, the estimated gain is \levelGain{} (model \levelModelGain{}) and cost is \levelCost{} (model \levelModelCost{}), consistent with the asymmetric rewards for a win, draw and defeat. These are adjusted comparisons across observed states, not causal estimates of individual goals.
+We first examine whether the scoring and conceding stakes reflect observed match consequences, then check how aggregated action values relate to team results.
 
-Repeating this across 10-minute bins and score states with sufficient data gives \nCells{} cells (Fig.~\ref{fig:stakes}). Against the empirical cost estimates, $\Lm$ has mean absolute error \maeCost{} points, slope \slopeCost{} and Spearman correlation \rhoCost{}; $\Lp$ has mean absolute error \maeGain{} against the gain estimates. For total stakes, $\Lp+\Lm$ reaches correlation \rhoTotal{}, compared with \rhoTotalSO{} for scoring-only pressure. The latter tracks the gain from scoring (\rhoGainSO{}) much more closely than the cost of conceding (\rhoCostSO{}), supporting the need to represent both stakes.
+\subsection{Consequences of Scoring and Conceding}
+We estimate gains from scoring and costs of conceding by comparing final league points across adjacent score states, adjusting for pre-match Elo difference~\cite{hvattum2010} and home advantage. After the 80th minute, a team leading by one goal faces an estimated conceding cost of \realCost{} points and a scoring gain of only \realGain{} (difference \costGainDiff{}, 95\% interval \costGainLow{} to \costGainHigh{}). In soccer terms, a late equaliser takes away most of the two points that separate a win from a draw, while a second goal adds little to a win that is already likely.
 
-\begin{figure}[tb]
+The model follows these observed consequences across \nCells{} combinations of score state and 10-minute bin (Fig.~\ref{fig:stakes}), with mean absolute errors of about \maeCost{} points for both gains and costs. Scoring-only pressure tracks the gains well, but its Spearman correlation with conceding costs is only \rhoCostSO{}, compared with \rhoCost{} for $\Lm$. The observed asymmetry therefore supports valuing prevention separately from attack.
+
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/stakes.pdf}
-\caption{The stakes of the next goal over match time. Lines show estimates for held-out leagues; points show contrasts in observed final points adjusted for Elo difference and home advantage. For one-goal leads, the gain from scoring and cost of conceding diverge.}
+\caption{Scoring gains and conceding costs over match time. Lines are model estimates for held-out leagues; points are contrasts in observed final points, adjusted for Elo difference and home advantage.}
 \label{fig:stakes}
 \end{figure}
 
-The distinction changes how credit is allocated. We define goal-prevention actions here as those that reduce estimated conceding probability, and normalise each weighting scheme to have mean one. For one-goal leads after the 80th minute, the mean prevention weight is \weightTwo{} under $\Lm$, compared with \weightSO{} under scoring-only pressure. Across all moments when a team is ahead, two-sided weighting assigns \creditLow{} to \creditHigh{} times as much prevention credit as scoring-only weighting in each position.
+\subsection{Agreement with Team Results}
+We next sum each team's action values and subtract its opponent's total. At match level, this net value follows the points earned more closely than the goal difference itself does (Pearson correlation \ledgerMatchR{} against \ledgerMatchRGd{}), reflecting that the stakes weight each goal by whether it changes a win, draw or defeat. Across \ledgerTeams{} team seasons, the correlation is \ledgerSeasonR{} with a slope of \ledgerSeasonSlope{} (Fig.~\ref{fig:ledger}). Clutch values are therefore on the scale of league points -- a CPI of 0.3 corresponds to about 0.3 points per 90 minutes.
 
-\section{What CPI Measures}
-\label{sec:cpi}
-\textbf{Agreement with League Points.} We compare a team's summed action value minus its opponent's with observed points, fitting a regression with an intercept. At match level, the slope is \ledgerMatchSlope{} and correlation \ledgerMatchR{}, compared with \ledgerMatchRGd{} for goal difference and \ledgerMatchRVaep{} for unweighted VAEP. Across \ledgerTeams{} team seasons, the slope is \ledgerSeasonSlope{} and correlation \ledgerSeasonR{} (Fig.~\ref{fig:ledger}a). This supports the scale of the values, although the ledger is not an exact reconstruction of league points. Unweighted VAEP requires a fitted slope of about one half to map onto points.
-
-\begin{figure}[tb]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{figures/ledger_goals.pdf}
-\caption{(a) Season net clutch value against league points; the slope is close to one. (b) Non-penalty goal counts against summed clutch value, for players with at least eight such goals. The dashed line shows average value per goal.}
+\includegraphics[width=0.85\textwidth]{figures/season_points.pdf}
+\caption{Season net clutch value against earned league points, one dot per team. The dashed fitted line includes an intercept.}
 \label{fig:ledger}
 \end{figure}
 
-\textbf{How CPI Differs from VAEP.} Stakes change contribution credit despite broad agreement between the ratings. Goals have similar VAEP values across situations (Table~\ref{tab:goals}), but mean clutch value is \goalLevelLateV{} points from a level score after minute 85 and near zero three or more goals ahead after minute 60. The lowest-stakes fifth accounts for \shareLowVaep\% of total absolute VAEP value but \shareLowCpi\% of absolute clutch value; the highest-stakes fifth accounts for \shareTopVaep\% and \shareTopCpi\%. Rankings share \sharedTopLow{} to \sharedTopHigh{} players in each outfield top 10, with median changes of \moveLow{} to \moveHigh{} places across positions. Aubameyang's \goalsAubameyang{} non-penalty goals averaged \ppgAubameyang{} points, with \decidedAubameyang\% at low stakes ($\Lp<0.1$); Zapata's \goalsZapata{} averaged \ppgZapata{} (Fig.~\ref{fig:ledger}b).
+\FloatBarrier
+\section{How Match Context Changes Player Assessment}
+\label{sec:cpi}
+For player assessment, the central question is how much an action mattered to the result. We first consider goals, then the preventive actions and saves that protect a lead, and finally who delivered most.
 
-\begin{table}[tb]
+\subsection{Credit for Decisive Actions}
+A late winner can turn one point into three, whereas another goal in a comfortable win changes little about the result. VAEP gives both kinds of goal similar values, because it measures the change in scoring chance, which is much the same for most goals (Table~\ref{tab:goals}). CPI separates them: a goal at level scores after the 85th minute is worth \goalLevelLateV{} league points on average, while a goal three or more ahead after the 60th minute is worth almost nothing. The same shift holds across all actions. The lowest-stakes 20\% of actions account for \shareLowVaep\% of total absolute VAEP value but only \shareLowCpi\% of total absolute CPI value. Conversely, the highest-stakes 20\% account for a larger share of total absolute CPI value (\shareTopCpi\%) than of total absolute VAEP value (\shareTopVaep\%). For match review, CPI therefore directs attention to the contributions that shaped the result, while VAEP continues to describe their quality.
+
+\begin{table}[htbp]
 \centering
-\caption{Top: mean non-penalty goal values ($V$, league points). Bottom: largest rank changes per outfield position among players with at least 1,500 minutes; ranks use the full 900-minute sample.}
+\caption{Mean values of non-penalty goals by match context. VAEP is on a goal-probability scale; $V$ is in league points.}
 \label{tab:goals}
 \small
+\setlength{\tabcolsep}{6pt}
 \begin{tabular}{@{}lrcc@{}}
 \toprule
 Goal scored when & Count & VAEP & $V$ \\
@@ -147,239 +182,148 @@ Goal scored when & Count & VAEP & $V$ \\
 \tabGoalValues
 \bottomrule
 \end{tabular}
-
-\medskip
-\begin{tabular}{@{}lllrr@{}}
-\toprule
-Player & Position & Team & VAEP rank & CPI rank \\
-\midrule
-\tabMovers
-\bottomrule
-\end{tabular}
 \end{table}
 
-\textbf{Player Ratings on a Common Scale.} Mean CPI is \meanCPIF{} for forwards, \meanCPIM{} for midfielders, \meanCPID{} for defenders and \meanCPIG{} for goalkeepers, in league points per 90. Table~\ref{tab:leaders} lists each position's top three. Lionel Messi leads with \messiCPI{} (95\% interval \messiLow{} to \messiHigh{}), totalling \messiTotal{} season points. Shot-stopping credits David de Gea with \savedGea{} points above baseline, Alisson \savedAlisson{}, Jan Oblak \savedOblak{} and Nick Pope \savedPope{}. De Gea prevented \preventedGea{} estimated goals and Oblak \preventedOblak{}, but their points saved are similar because Oblak's shot outcomes carried greater stakes per goal prevented.
+\subsection{Scoring Value Beyond Goal Totals}
+Goal totals tell us how often a player scored; Fig.~\ref{fig:goals} also shows how much those goals mattered. The dashed line marks the average value per goal, so players above it scored when results were more at stake than usual, and players below it scored more of their goals at low stakes. Moreno, well above the line, matches Ronaldo's season scoring value with \goalsMoreno{} goals to Ronaldo's \goalsRonaldo{}. A scout reading only the scoring chart would miss this difference. Goals, however, are only part of the picture. CPI also credits the actions that stop them.
 
-\begin{table}[tb]
+\begin{figure}[htbp]
 \centering
-\caption{Top three by position. CPI and Shrunk (empirical-Bayes CPI) are per 90; Points is the season total. Intervals: 1,000 match resamples. Top 10: posterior probability; VAEP: unweighted-value rank.}
-\label{tab:leaders}
-\small
-\begin{tabular}{@{}llcrrrr@{}}
-\toprule
- & Player & CPI (95\% interval) & Points & Shrunk & Top 10 & VAEP \\
-\midrule
-\tabLeaders
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=0.85\textwidth]{figures/goals_context.pdf}
+\caption{Non-penalty goal totals and their estimated season clutch value, for players with at least eight such goals. The dashed line marks the sample's average value per goal. Totals cover goals only; CPI also includes other actions and is scaled per 90 minutes.}
+\label{fig:goals}
+\end{figure}
 
-\textbf{Messi and Ronaldo.} Messi leads \nForwards{} forwards; Ronaldo ranks \ronaldoRank{} with \ronaldoCPI{}, about twice the position mean. Their goals contribute similar value, \caseGoalsM{} and \caseGoalsR{} league points per 90. The difference comes from other actions: Messi recorded \messiActions{} on-ball actions per 90 to Ronaldo's \ronaldoActions{}, his passes and crosses added \casePassM{} points per 90 against \casePassR{}, and his missed shots cost \caseMissM{} against \caseMissR{}. Messi's CPI is higher in \caseAhead\% of match resamples.
+\subsection{Credit for Protecting a Lead}
+Protecting a lead is another form of decisive performance. A clearance that reduces the threat of a late equaliser helps preserve the win even though it adds no goal or assist. In \exBMatch{}, with the home side leading \exBScore{} in minute \exBMinute{}, a clearance by \exBPlayer{} cut the estimated chance of conceding from \exBPrevPc{} to \exBPc{}. Because conceding would then have cost \exBLm{} league points, CPI values the clearance at \exBV{} points, against \exBVaep{} under VAEP. Across all moments when a team is ahead, preventive actions receive \creditLow{} to \creditHigh{} times the credit that scoring-only pressure would give them, once both weightings are put on the same average scale.
 
+For a goalkeeper, a save's match value also depends on what conceding would cost. David de Gea prevented more estimated goals than Jan Oblak, yet their points-saved totals are nearly equal (\savedGea{} and \savedOblak{}), because Oblak's saves came at higher stakes. CPI thus credits keepers for the results their saves protect, not only for the goals they prevent.
 
+\subsection{Who Delivered When It Mattered}
+Table~\ref{tab:profiles} lists the highest CPI in each position. Lionel Messi leads all players with \messiCPI{} league points per 90. The other position leaders include players outside the usual headlines, such as Jérôme Roussillon (Montpellier) in defence and Nick Pope (Burnley) in goal. This is the kind of profile CPI is built to surface: players whose contributions came when results were at stake, whatever their reputation. The table's intervals, adjusted ratings and top-10 probabilities show how firmly each place is held. Messi's lead is the clearest.
 
-\textbf{The Biggest Moments.} Late winners are the most valuable actions and late own goals the most costly (Table~\ref{tab:moments}). Barcelona won La Liga by \marginBarca{} points; Messi contributed \paaBarca{} points above the position-mean rate over his minutes. Lille stayed up by \marginLille{} point, with Nicolas P\'ep\'e \paaLille{} points above his position benchmark. These comparisons are descriptive, not replacement-player counterfactuals.
-
-\begin{table}[tb]
+\begin{table}[htbp]
 \centering
-\caption{The four highest and four lowest action values $V$ in the season, in league points. Score is before the action, from the acting team's perspective; final scores follow home--away order.}
-\label{tab:moments}
+\caption{Highest estimated CPI within each position among players with at least 900 minutes. CPI and Adjusted (Empirical-Bayes CPI) are league points per 90, with 95\% match-bootstrap intervals; Top 10 is the posterior probability of a top-10 place within the position.}
+\label{tab:profiles}
 \small
-\begin{tabular}{@{}llrcr@{}}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}llccc@{}}
 \toprule
-Player & Match, final score & Min & Score & $V$ \\
+Position & Player & CPI (95\% interval) & Adjusted & Top 10 \\
 \midrule
-\tabMoments
+\tabProfilesFull
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{What Happens When the Result Goes on the Line?}
-\label{sec:pressure}
-An unadjusted comparison of high- and low-stakes moments would mix the stakes with tactics, fatigue and player selection. We therefore compare each player within the same match. For action $i$ by player $p$ in match $m$, with action-type and start-zone combination $z$,
-\begin{equation}
-y_i=\beta\,\mathrm{High}_i+\gamma\,\mathrm{Mid}_i+\alpha_{pm}+\alpha_{z}+\mathrm{score}_i+\mathrm{time}_i+\varepsilon_i ,
-\end{equation}
-with player-by-match and type-by-zone fixed effects, goal-difference indicators, 5-minute bins and standard errors clustered by match. High denotes the top 20\% of $\Lp+\Lm$, Mid the middle 60\%, and the bottom 20\% is the reference, following the split in~\cite{bransen2019}. Separate score and time controls leave variation in their combination, including score changes within a match. This design reduces confounding but does not isolate psychological pressure from tactical responses. Five primary tests were fixed before inspecting results, with Holm correction across them.
-
-\begin{table}[tb]
-\centering
-\caption{Adjusted high- versus low-stakes differences (95\% match-clustered intervals). Completion is in percentage points (pp); value is unweighted VAEP. Exploratory tests are not Holm-adjusted.}
-\label{tab:pressure}
-\small
-\begin{tabular}{@{}lcc@{}}
-\toprule
-Primary test & Effect & Holm $p$ \\
-\midrule
-\tabPressure
-\bottomrule
-\end{tabular}
-\end{table}
-
-High stakes are associated with a \qCompletion{} percentage-point reduction in pass completion, relative to overall completion of \baseCompletion\%, and \qProgress{}\,m greater forward progress per pass (Table~\ref{tab:pressure}). Unweighted action value is lower by an amount equivalent to \qValuePct\% of its overall mean. Neither home advantage nor age detectably moderates the completion difference. In the exploratory split by the larger stake, completion is \xSideCompletion{} percentage points lower and passes advance \xSideProgress{}\,m further when conceding carries the larger stake, with no detectable value difference. This pattern is consistent with more direct play, although the data do not establish players' intentions. When scoring carries the larger stake, completion does not differ detectably and action value is lower.
-
-\section{Do Coaches Agree?}
+\FloatBarrier
+\section{Attacking and Preventive Value in Substitution Choices}
+\label{sec:football}
 \label{sec:coaches}
-We analyse eligible substitutions from minute 60 with the team one goal up or down: \nTakenOff{} coming-off and \nBroughtOn{} coming-on decisions. Attacking ($\Delta P_s\Lp$) and goal-prevention ($-\Delta P_c\Lm$) ratings use each player's \emph{other} matches and are standardised within position. Conditional logit models compare candidates within decisions, controlling for position and, for players coming off, time on the pitch and a yellow-card indicator. Intervals use a match bootstrap (Appendix~\ref{app:designs}). Hypotheses and definitions were fixed in advance.
+Picture a team leading 1--0 with fifteen minutes left. The manager must decide who comes off and who comes on, and the right answer depends on the scoreline: a lead needs protecting, a deficit needs a goal. CPI draws the same line by valuing attacking and preventive contributions separately. Substitution decisions therefore provide an opportunity to examine whether coaches' choices reflect the demands of the scoreline.
 
-\begin{figure}[tb]
+We study the \nTakenOff{} coming-off and \nBroughtOn{} coming-on decisions made from the 60th minute with a team one goal up or down. Each candidate's attacking and goal-prevention ratings come from their other matches, so the game being decided does not influence their ratings, and candidates are compared within each substitution decision.
+
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/coaches.pdf}
-\caption{Association between substitution choices and CPI channels: odds ratios per one standard deviation of rating from the player's other matches, with 95\% match-bootstrap intervals.}
+\caption{Substitution choices and CPI's two components (\nTakenOff{} coming-off and \nBroughtOn{} coming-on decisions). Blue marks the attacking rating and orange the goal-prevention rating. Odds ratios are per standard deviation of rating from other matches; values below 1 mean lower odds of selection. Bars are 95\% match-bootstrap intervals. Leading and trailing reverse which component matters.}
 \label{fig:coaches}
 \end{figure}
 
-When a team leads by one, a one-standard-deviation higher goal-prevention rating is associated with lower odds of coming off (\orOffUpDef{}, 95\% interval \orOffUpDefLow{} to \orOffUpDefHigh{}), while the attacking association is not detectable (\orOffUpAtt{}; Fig.~\ref{fig:coaches}). When trailing by one, a higher attacking rating is associated with lower odds of coming off (\orOffDownAtt{}, \orOffDownAttLow{} to \orOffDownAttHigh{}), while goal prevention has no detectable association (\orOffDownDef{}). This pattern is consistent with the channels capturing contributions relevant to different match situations.
+\textbf{Coaches Keep the Players the Scoreline Needs.} When protecting a lead, a player whose goal-prevention rating is one standard deviation higher has about \pctOffUpDef\% lower odds of being taken off, while attacking quality makes no clear difference (Fig.~\ref{fig:coaches}). When chasing, the roles reverse. Stronger attackers have about \pctOffDownAtt\% lower odds of coming off, and prevention makes no clear difference. A holding midfielder who cuts out passes is worth keeping at 1--0, a forward who creates chances at 0--1, and coaches' decisions follow that logic. The reversal is statistically significant (Table~\ref{tab:swap}). A single overall rating, which mixes the two components, cannot show it.
 
-For players coming on, a higher attacking rating is associated with selection when trailing (\orOnDownAtt{}, \orOnDownAttLow{} to \orOnDownAttHigh{}). When leading, neither rating has a detectable association (goal prevention \orOnUpDef{}). In an exploratory comparison within the position sent on, coaches chasing a goal select the highest-rated attacker in \pickDown\% of decisions, compared with \pickDownChance\% under uniform choice; when protecting a lead, they select the highest-rated goal preventer in \pickUp\%, compared with \pickUpChance\%. This suggests a possible gap in the selection of lead protectors, but does not establish that coaches undervalue them. An exploratory comparison with unweighted channels shows no consistent improvement in model fit from stakes weighting.
+\begin{table}[htbp]
+\centering
+\caption{Change in each component's odds ratio from trailing by one to leading by one (ratio of odds ratios), with 95\% intervals and two-sided $p$ values from 500 match resamples.}
+\label{tab:swap}
+\small
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+Decision & Component & Ratio (95\% interval) & $p$ \\
+\midrule
+\tabSwap
+\bottomrule
+\end{tabular}
+\end{table}
 
-\section{Robustness}
+\textbf{The Bench Tells a Different Story.} When chasing a deficit, coaches show a preference for their strongest attacking options: the highest-rated attacker on the bench is brought on in \pickDownR\% of decisions, compared with \pickDownChanceR\% under a rating-independent selection benchmark. When protecting a lead, however, the highest-rated goal preventer is brought on in \pickUpR\% of decisions, matching the expected rate under the same benchmark. Thus, although coaches tend to retain players with stronger goal-prevention ratings when protecting a lead, they do not show a similar preference when selecting substitutes. Analysts can therefore use the two components to review late-game substitutions, and the goal-prevention rating to shortlist bench players for protecting a lead.
+
+\section{Robustness and Repeatability}
 \label{sec:robust}
-The intervals reflect match sampling conditional on fitted predictions. Changing the seed, booster or label window, or adding team strength, leaves within-position rank correlations at or above \sensRhoMin{} (Table~\ref{tab:sensitivity}); adding team strength alone gives at least \strengthRhoMin{}. Processing choices matter more. Leaving away actions in the home team's frame gives incorrect shot geometry, reducing scoring AUC from \baseAuc{} to \mirrorAuc{} and changing mean goalkeeper CPI from \baseKeeper{} to \mirrorKeeper{}. Removing penalty and corner baselines raises mean forward CPI from \baseForward{} to \noBaseForward{} by crediting takers with the initial set-piece chance. The pipeline tests these conventions. Appendix~\ref{app:uncertainty} reports reliability and discrimination.
+\noindent\textbf{Modelling Choices.} CPI rankings are highly stable across several modelling choices. Within-position rank correlations remain at or above \sensRhoMin{} when changing the random seed, gradient-boosting model, prediction window or inclusion of team strength in the stakes. Data conventions have a greater effect. Incorrectly accounting for attacking direction in away-team actions misplaces shots, reducing scoring ROC-AUC from \baseAuc{} to \mirrorAuc{} and changing mean goalkeeper CPI from \baseKeeper{} to \mirrorKeeper{}. Removing the penalty and corner adjustments increases mean forward CPI from \baseForward{} to \noBaseForward{}, as players receive credit for winning set pieces rather than only for their execution. Across these alternative data conventions, rank correlations fall to as low as \choiceRhoMin{}. The pipeline therefore checks attacking direction automatically and applies the set-piece adjustments consistently.
 
-\begin{table}[tb]
+\textbf{Repeatability.} Stability across modelling choices does not necessarily mean that player ratings remain consistent across matches. To examine repeatability, we compare ratings from odd- and even-gameweek halves of the season. Reliability is the Spearman correlation between players' per-90 ratings in the two halves within each position, adjusted to full-season length with the Spearman--Brown correction. CPI shows lower split-half reliability than VAEP across all positions, with the lowest reliability among goalkeepers (Table~\ref{tab:trust}). This difference partly reflects what the two metrics measure. VAEP evaluates the quality of a player's actions, whereas CPI also accounts for when those actions occur and the importance of the match situation. High-stakes situations, such as close matches late in the game, vary across a team's fixtures and results, making CPI more sensitive to the distribution of match situations within each half of the season. CPI therefore reflects the value a player delivered under the circumstances of a particular season, rather than necessarily indicating a consistently repeatable level of performance. The reported intervals and adjusted ratings provide additional information about the uncertainty in these player comparisons.
+
+\begin{table}[htbp]
 \centering
-\caption{Within-position Spearman rank correlation with the reference run, and top-10 overlap (forward, midfielder, defender, goalkeeper). Window and data-choice rows use a faster booster, compared with its own reference run.}
-\label{tab:sensitivity}
-\small
-\begin{tabular}{@{}lccccc@{}}
-\toprule
- & Fwd & Mid & Def & GK & Top 10 \\
-\midrule
-\multicolumn{6}{@{}l}{\textit{Modelling choices}} \\
-\tabSensitivity
-\midrule
-\multicolumn{6}{@{}l}{\textit{Data choices}} \\
-\tabChoices
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Discussion and Conclusion}
-\label{sec:discussion}
-CPI shows why creating a chance and protecting a lead need different weights. Agreement with observed stakes and season points supports an interpretable scale for delivered contributions. The ledger is a consistency check, not evidence of forecasting accuracy. Coaches' retention choices suggest that the two channels reflect different tactical demands: prevention while leading and attacking contribution while trailing. However, stakes weighting does not consistently improve selection-model fit over unweighted ratings.
-
-A club analyst could use CPI to select video clips from late one-goal leads, reviewing clearances and turnovers through attacking and prevention credit. This makes lead protection visible beyond goal totals. Lower completion with greater forward progress may reflect tactics, so CPI should inform review alongside video evidence.
-
-For season evaluation, reporting CPI beside unweighted VAEP and uncertainty intervals separates action quality from the stakes of delivery, including defensive contributions that scoring statistics overlook.
-
-\textbf{Limitations.} CPI is retrospective and opportunity-dependent. Its lower reliability than VAEP limits claims about persistent clutch ability, and event data omit off-ball contributions. Goalkeeper samples are small, while match-bootstrap intervals exclude model-training uncertainty. Substitution associations do not establish better decisions, and other-match ratings can include later matches. Multiple seasons, chronological validation and tracking data are priorities.
-
-\textbf{Conclusion.} CPI places attacking, defensive and goalkeeper contributions on a common league-points scale. It explains who delivered when results were at stake, including lead protectors, and connects individual actions to the consequences of the match situation. Its practical value is to complement standard ratings with an account of decisive delivery. Predictive and decision-making benefits require prospective testing.
-
-\medskip\noindent\textbf{Code and Data.} \url{https://github.com/ShahidAhmed7/clutch-cpi-soccer}. Numerical findings and tables are generated from the pipeline's results files.
-
-\appendix
-\section{Data and Checks}
-\label{app:data}
-Raw events are converted per match with the reference Wyscout converter~\cite{socceraction}, which removes non-actions, merges duels, inserts dribbles and interceptions, places shot end points from goal-mouth tags, and fixes goal-kick and save coordinates. Goals are events carrying tag 101 outside save attempts; own goals carry tag 102, and the converter's inserted interception rows, which share the event identifier, are excluded when flags are attached. The score before each action counts goals and own goals in match order; time is $e=(\text{period}-1)\cdot2700+\min(t,2699.9)$ seconds, so stoppage time stays at the end of its half. The pipeline stops unless (i) reconstructed scores match official results for at least 99.8\% of team-match rows (observed \scoreMatch\%, the one miss being a goal with no goal tag in the raw events); (ii) all \nOwnGoals{} own goals survive conversion; (iii) the median shot starts within 25\,m of the attacked goal for both home and away teams once states are in the acting team's direction; (iv) corners and free kicks keep their event names; (v) the match clock never runs backwards.
-
-\section{Action-Value Models}
-\label{app:models}
-\textbf{Features.} For the action and its two predecessors: action type, result and body part (categorical); start and end location; distance and angle to goal at start and end; movement $(dx,dy)$ and its length; period and time; whether each predecessor belongs to the same team; time and space since each predecessor; plus goals for, goals against and goal difference. All coordinates are mirrored so the acting team attacks left to right.
-
-\textbf{Training.} CatBoost uses up to 1,000 trees, learning rate 0.05, depth 6, $\ell_2$ regularisation 3, log-loss and early stopping after 50 rounds on 15\% of training matches; seed 42, one T4 GPU (about 5 minutes per fold). Table~\ref{tab:folds} gives held-out metrics. Expected calibration error over 20 quantile bins is at most \eceMax{}$\times10^{-3}$, against base rates near 0.016 and 0.0055. Aggregate calibration does not guarantee accurate differences for every action.
-
-\begin{table}[tb]
-\centering
-\caption{Held-out performance by league (ECE in units of $10^{-3}$).}
-\label{tab:folds}
-\scriptsize
-\begin{tabular}{@{}lrrrrrrrrr@{}}
-\toprule
- & & \multicolumn{4}{c}{Scoring model} & \multicolumn{4}{c}{Conceding model} \\
-\cmidrule(lr){3-6}\cmidrule(l){7-10}
-League & Actions & AUC & Brier & ECE & Trees & AUC & Brier & ECE & Trees \\
-\midrule
-\tabFolds
-\bottomrule
-\end{tabular}
-\end{table}
-
-\textbf{Worked Example 1: A Late Winner.} In \exAMatch{} (\exAScore{}, minute \exAMinute{}), \exAPlayer{} scores. The previous state, read from his team's side, gives $P_s=\exAPrevPs$ and $P_c=\exAPrevPc$; after the shot $P_s=\exAPs$ and $P_c=\exAPc$. So $\Delta P_s=\exAdPs$ and $\Delta P_c=\exAdPc$. At \exAScore{} so late, $\Lp=\exALp$ and $\Lm=\exALm$, giving $V=\exAdPs\times\exALp-(\exAdPc)\times\exALm=\exAV$ league points, against a VAEP value of \exAVaep{}.
-
-\textbf{Worked Example 2: A Lead-Protecting Clearance.} In \exBMatch{} (\exBScore{}, minute \exBMinute{}), \exBPlayer{} clears. Possession had changed, so the previous state's opponent scoring probability $\exBPrevPc$ becomes his team's conceding probability; after the clearance $P_c=\exBPc$. Thus $\Delta P_c=\exBdPc$ and $\Delta P_s=\exBdPs$. With a late one-goal lead, $\Lp=\exBLp$ and $\Lm=\exBLm$, giving $V=(\exBdPs)\times\exBLp-(\exBdPc)\times\exBLm=\exBV$ league points. The high cost of conceding gives substantial credit to the reduced conceding probability; the unweighted VAEP value is \exBVaep{}.
-
-\section{Outcome Model and Stakes}
-\label{app:stakes}
-\textbf{Model.} With $\mathbf z=(g,n,n^2,h)$, $f(\mathbf z)=\sigma(\beta_0+\beta_g g+\beta_n n+\beta_{nn}n^2+\beta_h h)$ is fitted by $\ell_2$-regularised logistic regression on the team-by-frame panel ($C=1$, standardised inputs). On the fold that holds out England, in raw units, $\beta_0=\lrBzero$, $\beta_g=\lrBg$, $\beta_n=\lrBn$, $\beta_{nn}=\lrBnn$, $\beta_h=\lrBh$. Table~\ref{tab:specs} compares richer forms on held-out leagues; a rule fixed in advance kept the simplest unless another improved the ranked probability score by more than 0.5\%.
-
-\textbf{Outcome Probabilities.} With rates $\theta^+$ and $\theta^-$ for the team and its opponent, future goals $U\sim\mathrm{Bin}(n,\theta^+)$ and $D\sim\mathrm{Bin}(n,\theta^-)$ are independent, and
-\begin{equation}
-P(\mathrm{win}\mid g)=\sum_{u=0}^{M}\sum_{d=0}^{M}b(u;n,\theta^+)\,b(d;n,\theta^-)\,\mathbf 1[g+u-d>0],
-\end{equation}
-with $M=6$ and $P(\mathrm{draw}\mid g)$ given by $\mathbf 1[g+u-d=0]$. Since $P(\mathrm{win}\mid g+1)=P(\mathrm{win}\mid g)+P(\mathrm{draw}\mid g)$ under these assumptions, $\Lp(g)=2P(\mathrm{draw}\mid g)+P(\mathrm{draw}\mid g+1)$ and $\Lm(g)=2P(\mathrm{draw}\mid g-1)+P(\mathrm{draw}\mid g)$; the computed values match these forms to machine precision.
-
-\textbf{Worked Example 3: One Goal Up at Home in the 85th Minute.} Then $n=\wxN$ frames remain; $f=\wxFt$ for the home team and $\wxFo$ for the visitors, so $\theta^+=\wxTt$ and $\theta^-=\wxTo$ per frame. Convolution gives $P(\mathrm{win})=\wxWin$ and $P(\mathrm{draw})=\wxDraw$, so $W(1)=\wxW$; with the same rates $W(2)=\wxWup$ and $W(0)=\wxWdown$. Hence $\Lp=\wxLp$ and $\Lm=\wxLm$: conceding would cost about seven times what scoring would gain.
-
-\begin{table}[tb]
-\centering
-\caption{Outcome-model forms on held-out leagues. MAE: error of $\Lm$ against real costs of conceding.}
-\label{tab:specs}
-\small
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-Form & Log loss & AUC & RPS & MAE \\
-\midrule
-\tabStakeSpecs
-\bottomrule
-\end{tabular}
-\end{table}
-
-\section{Keepers, Uncertainty and Stability}
-\label{app:uncertainty}
-\textbf{Post-Shot Model.} Gradient-boosted trees (200 iterations, depth 4, learning rate 0.05) on the \psxgShots{} on-target shots, with start location, distance, angle, header flag, shot type and goal-mouth zone (nine zones from Wyscout tags 1201--1209), trained leave-one-league-out: AUC \psxgAuc{}, Brier \psxgBrier{}, \psxgPred{} goals predicted against \psxgGoals{} scored.
-
-\textbf{Intervals and Shrinkage.} We resample matches 1,000 times, recomputing per-90 ratings with predictions fixed. Within position, ratings $x_p$ and bootstrap variances $s_p^2$ give $\tau^2=\max(\mathrm{Var}(x)-\overline{s^2},10^{-9})$. The target $\mu$ averages $x_p$ with weights $1/(\tau^2+s_p^2)$. With $w_p=\tau^2/(\tau^2+s_p^2)$, top-10 probabilities use 20,000 draws from $\mathcal N(w_px_p+(1-w_p)\mu,\,w_ps_p^2)$.
-
-\textbf{Stability.} Split-half reliability uses Spearman rank correlations between odd- and even-gameweek ratings (at least 450 minutes in each half), with the Spearman--Brown correction $2\rho/(1+\rho)$. Discrimination is $1-\overline{s^2}/\mathrm{Var}(x)$~\cite{franks2016}. CPI is less repeatable than unweighted VAEP in every position in this sample (Table~\ref{tab:trust}).
-
-\begin{table}[tb]
-\centering
-\caption{Reliability and discrimination by position, and rank agreement with baselines.}
+\caption{Split-half reliability between odd- and even-gameweek ratings, with the Spearman--Brown correction; players need at least 450 minutes in each half.}
 \label{tab:trust}
 \small
-\begin{tabular}{@{}lcccc@{}}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{@{}lcc@{}}
 \toprule
- & Fwd & Mid & Def & GK \\
+Position & CPI & VAEP \\
 \midrule
-Reliability, CPI & \relCPIF & \relCPIM & \relCPID & \relCPIG \\
-Reliability, plain VAEP & \relVaepF & \relVaepM & \relVaepD & \relVaepG \\
-Discrimination, CPI & \disCPIF & \disCPIM & \disCPID & \disCPIG \\
-Rank correlation, CPI and plain VAEP & \corrVaepF & \corrVaepM & \corrVaepD & \corrVaepG \\
-Rank correlation, CPI and goals+assists & \corrGaF & \corrGaM & \corrGaD & \corrGaG \\
+Forwards & \relCPIF & \relVaepF \\
+Midfielders & \relCPIM & \relVaepM \\
+Defenders & \relCPID & \relVaepD \\
+Goalkeepers & \relCPIG & \relVaepG \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{Pressure and Coach Designs}
-\label{app:designs}
-\textbf{Pressure.} Fixed effects for \qPlayersMatches{} player-match pairs and for action type by start zone ($8\times5$ grid) are removed by alternating projections. Ordinary least squares on the residuals gives the estimates, with standard errors clustered by match. Primary outcomes are open-play pass completion, unweighted VAEP value per action, and open-play pass forward progress; moderators of completion are home status and age (centred at 26, per five years). Holm's correction covers the five primary tests; the split by the larger stake is exploratory.
+\FloatBarrier
+\section{Discussion and Conclusion}
+\label{sec:discussion}
+CPI connects action quality with match consequences. Observed outcomes support separate scoring and conceding stakes, and aggregated values track team points. The resulting credit highlights decisive goals and the contributions that protect a result, and coaches' substitutions show that the attacking and preventive components matter at opposite scorelines.
 
-\textbf{Coaches.} For substitutions from minute 60 at goal difference $\pm1$, choice set $K_j$ contains outfield players on the pitch or unused on the bench, each with at least 450 minutes in other matches. Decisions require at least two eligible candidates, including the selected player. Ratings use other matches and are standardised within position. Choice probabilities are
+\textbf{Use for Analysts.} An analyst can use CPI and its uncertainty intervals together with VAEP to select consequential contributions for video review. Reviewing clearances and saves from narrow leads next to attacking actions makes prevention visible, and the goal-prevention rating can inform who is sent on to protect a lead.
+
+\textbf{Limitations and Future Work.} The stakes are defined by league points, three for a win and one for a draw. CPI therefore applies directly to leagues and to tournament group stages, but not to knockout matches, where a draw leads to extra time or penalties and two-legged ties depend on the aggregate score. The framework carries over by replacing expected league points with the probability of progressing, estimated from knockout data; developing this version is a natural next step. The study also covers one season of recorded on-ball actions, leaving off-ball work unmeasured, and role, opportunity and tactical instructions shape every rating. CPI is less repeatable than VAEP, which limits claims about a persistent clutch ability; goalkeeper estimates are particularly uncertain, and the intervals exclude uncertainty from model training. The substitution analysis describes choices rather than their effectiveness, stakes weighting does not improve its fit over unweighted components, and ratings from other matches can include later games. Multiple seasons with chronological validation, tracking data for off-ball contributions and prospective tests of substitution advice would address these points.
+
+\textbf{Conclusion.} CPI provides a common league-points scale for examining who delivered valuable attacking, preventive and goalkeeping contributions when results were at stake.
+
+\appendix
+\section{Models and Stakes}
+\label{app:stakes}
+\textbf{Action Values.} For the action and its two predecessors, the \nFeatures{} features cover action type, outcome and body part; start and end locations, distances and angles to goal, and movement; period and time; whether each predecessor belongs to the acting team, with the time and distance since it; and the acting team's goals, the opponent's goals and their difference. All locations follow the acting team's attacking direction. CatBoost uses up to 1,000 trees (learning rate 0.05, depth 6, $\ell_2$ regularisation 3, log-loss) with early stopping on 15\% of training matches. Across the five held-out leagues, ROC-AUC ranges from \foldAucS{} for scoring and from \foldAucC{} for conceding, and expected calibration error is at most \eceMax{}$\times10^{-3}$. Following socceraction, the scoring probability before penalties and corners is fixed at 0.792 and 0.047.
+
+\textbf{Outcome Model.} A match is divided into 100 intervals of 54 seconds. With goal difference $g$, intervals remaining $n$ and home indicator $h$, the chance of scoring at least once more is $f(g,n,h)=\sigma(\beta_0+\beta_g g+\beta_n n+\beta_{nn}n^2+\beta_h h)$, fitted by $\ell_2$-regularised logistic regression with one row per team and interval. Richer forms with red cards or score-by-time interactions did not improve the held-out ranked probability score by the 0.5\% required in advance. The chance becomes a per-interval rate $\theta=1-(1-f)^{1/n}$, and the opponent's rate uses $f(-g,n,1-h)$. With independent future goals $U\sim\mathrm{Bin}(n,\theta^+)$ and $D\sim\mathrm{Bin}(n,\theta^-)$,
 \begin{equation}
-P(k\mid K_j)=\frac{\exp(\mathbf x_k^\top\beta)}{\sum_{l\in K_j}\exp(\mathbf x_l^\top\beta)}.
+P(\mathrm{win}\mid g)=\sum_{u=0}^{6}\sum_{d=0}^{6}b(u;n,\theta^+)\,b(d;n,\theta^-)\,\mathbf 1[g+u-d>0],
 \end{equation}
-We maximise conditional log-likelihood by Newton's method; intervals use 500 match resamples. There are \qOffUp{} coming-off decisions when leading and \qOffDown{} when trailing. Comparisons of bench rankings and unweighted channels are exploratory.
+where $b$ is the binomial probability; $P(\mathrm{draw}\mid g)$ uses $\mathbf 1[g+u-d=0]$. Rates and time stay fixed when evaluating $g\pm1$.
 
+\textbf{Goalkeepers and Uncertainty.} The post-shot model is a gradient-boosted classifier on the \psxgShots{} on-target shots, using start location, distance, angle, a header flag, shot type and goal-mouth zone. Trained on four leagues and tested on the fifth, its ROC-AUC is \psxgAuc{}, with \psxgPred{} goals predicted against \psxgGoals{} scored. Intervals come from 1,000 match resamples with predictions fixed. Within each position, the Empirical-Bayes rating is $w_px_p+(1-w_p)\mu$ with $w_p=\tau^2/(\tau^2+s_p^2)$, where $s_p^2$ is the bootstrap variance of rating $x_p$, $\tau^2$ the between-player variance and $\mu$ the precision-weighted position mean. Top-10 probabilities use 20,000 draws from $\mathcal N(w_px_p+(1-w_p)\mu,\,w_ps_p^2)$.
+
+\section{Substitution Analysis}
+\label{app:designs}
+For each substitution from minute 60 at goal difference $\pm1$, the candidates are the eligible outfield players on the pitch (coming off) or on the unused bench (coming on), each with at least 450 minutes in other matches. A conditional logit model compares candidates within each decision using their standardised attacking and goal-prevention ratings, position and, for players coming off, time on the pitch and a yellow card. Intervals use 500 match resamples. Table~\ref{tab:swap} reports how each component's association changes between scorelines.
+
+\FloatBarrier
 \begin{credits}
 \subsubsection{\discintname}
 The authors have no competing interests to declare that are relevant to the content of this article.
 \end{credits}
 
-\begin{thebibliography}{10}
+\begin{thebibliography}{13}
+\raggedright
 \bibitem{decroos2019} Decroos, T., Bransen, L., Van Haaren, J., Davis, J.: Actions speak louder than goals: valuing player actions in soccer. In: Proc. 25th ACM SIGKDD, pp. 1851--1861 (2019). \doi{10.1145/3292500.3330758}
 \bibitem{bransen2019} Bransen, L., Robberechts, P., Van Haaren, J., Davis, J.: Choke or shine? Quantifying soccer players' abilities to perform under mental pressure. In: MIT Sloan Sports Analytics Conference (2019)
-\bibitem{socceraction} Decroos, T., et al.: socceraction, version 1.5.3. \url{https://github.com/ML-KULeuven/socceraction}, last accessed 2026/11/13
-\bibitem{otten2009} Otten, M.: Choking vs. clutch performance: a study of sport performance under pressure. J. Sport Exerc. Psychol. \textbf{31}(5), 583--601 (2009). \doi{10.1123/jsep.31.5.583}
-\bibitem{swann2017} Swann, C., Crust, L., Jackman, P., Vella, S.A., Allen, M.S., Keegan, R.: Performing under pressure: exploring the psychological state underlying clutch performance in sport. J. Sports Sci. \textbf{35}(23), 2272--2280 (2017). \doi{10.1080/02640414.2016.1265661}
-\bibitem{kharrat2020} Kharrat, T., McHale, I.G., L\'opez Pe\~na, J.: Plus--minus player ratings for soccer. Eur. J. Oper. Res. \textbf{283}(2), 726--736 (2020). \doi{10.1016/j.ejor.2019.11.026}
 \bibitem{robberechts2021} Robberechts, P., Van Haaren, J., Davis, J.: A Bayesian approach to in-game win probability in soccer. In: Proc. 27th ACM SIGKDD, pp. 3512--3521 (2021). \doi{10.1145/3447548.3467194}
 \bibitem{deshpande2016} Deshpande, S.K., Jensen, S.T.: Estimating an NBA player's impact on his team's chances of winning. J. Quant. Anal. Sports \textbf{12}(2), 51--72 (2016). \doi{10.1515/jqas-2015-0027}
+\bibitem{kharrat2020} Kharrat, T., McHale, I.G., L\'opez Pe\~na, J.: Plus--minus player ratings for soccer. Eur. J. Oper. Res. \textbf{283}(2), 726--736 (2020). \doi{10.1016/j.ejor.2019.11.026}
+\bibitem{otten2009} Otten, M.: Choking vs. clutch performance: a study of sport performance under pressure. J. Sport Exerc. Psychol. \textbf{31}(5), 583--601 (2009). \doi{10.1123/jsep.31.5.583}
+\bibitem{swann2017} Swann, C., Crust, L., Jackman, P., Vella, S.A., Allen, M.S., Keegan, R.: Performing under pressure: exploring the psychological state underlying clutch performance in sport. J. Sports Sci. \textbf{35}(23), 2272--2280 (2017). \doi{10.1080/02640414.2016.1265661}
 \bibitem{franks2016} Franks, A., D'Amour, A., Cervone, D., Bornn, L.: Meta-analytics: tools for understanding the statistical properties of sports metrics. J. Quant. Anal. Sports \textbf{12}(4), 151--165 (2016). \doi{10.1515/jqas-2016-0098}
-\bibitem{brill2025} Brill, R.S., Yurko, R., Wyner, A.J.: Exploring the difficulty of estimating win probability: a simulation study. J. Quant. Anal. Sports \textbf{22}(1), 105--115 (2025). \doi{10.1515/jqas-2024-0130}
-\bibitem{pappalardo2019} Pappalardo, L., et al.: A public data set of spatio-temporal match events in soccer competitions. Sci. Data \textbf{6}, 236 (2019). \doi{10.1038/s41597-019-0247-7}
+\bibitem{brill2025} Brill, R.S., Yurko, R., Wyner, A.J.: Exploring the difficulty of estimating win probability: a simulation study. J. Quant. Anal. Sports \textbf{22}(1), 105--115 (2026). \doi{10.1515/jqas-2024-0130}
 \bibitem{hall2009} Hall, P., Miller, H.: Using the bootstrap to quantify the authority of an empirical ranking. Ann. Statist. \textbf{37}(6B), 3929--3959 (2009). \doi{10.1214/09-AOS699}
+\bibitem{pappalardo2019} Pappalardo, L., et al.: A public data set of spatio-temporal match events in soccer competitions. Sci. Data \textbf{6}, 236 (2019). \doi{10.1038/s41597-019-0247-7}
+\bibitem{socceraction} Decroos, T., et al.: socceraction, version 1.5.3. \url{https://github.com/ML-KULeuven/socceraction}, last accessed 2026/11/13
+\bibitem{hvattum2010} Hvattum, L.M., Arntzen, H.: Using ELO ratings for match result prediction in association football. Int. J. Forecast. \textbf{26}(3), 460--470 (2010). \doi{10.1016/j.ijforecast.2009.10.002}
 \end{thebibliography}
 
 \end{document}

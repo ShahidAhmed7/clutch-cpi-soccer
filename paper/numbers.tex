@@ -28,7 +28,7 @@
 \newcommand{\rhoCost}{.99}
 \newcommand{\rhoCostLow}{.98}
 \newcommand{\rhoCostHigh}{1.00}
-\newcommand{\maeCost}{.05}
+\newcommand{\maeCost}{0.05}
 \newcommand{\slopeCost}{.93}
 \newcommand{\rhoGain}{.99}
 \newcommand{\maeGain}{.05}
@@ -50,7 +50,7 @@
 \newcommand{\ledgerMatchSlope}{1.12}
 \newcommand{\ledgerMatchR}{.91}
 \newcommand{\ledgerSeasonSlope}{1.09}
-\newcommand{\ledgerSeasonR}{.975}
+\newcommand{\ledgerSeasonR}{.98}
 \newcommand{\ledgerSeasonRGd}{.965}
 \newcommand{\ledgerSeasonRVaep}{.962}
 \newcommand{\ledgerMatchRGd}{.84}
@@ -66,9 +66,9 @@
 \newcommand{\meanCPIM}{.15}
 \newcommand{\meanCPID}{.11}
 \newcommand{\meanCPIG}{.09}
-\newcommand{\messiCPI}{.64}
-\newcommand{\messiLow}{.43}
-\newcommand{\messiHigh}{.86}
+\newcommand{\messiCPI}{0.64}
+\newcommand{\messiLow}{0.43}
+\newcommand{\messiHigh}{0.86}
 \newcommand{\messiTotal}{21.2}
 \newcommand{\relCPIF}{.32}
 \newcommand{\relVaepF}{.42}
@@ -197,12 +197,20 @@
 \newcommand{\pickDownChance}{44.0}
 \newcommand{\pickUpN}{954}
 \newcommand{\pickDownN}{733}
+\newcommand{\pctOffUpDef}{12}
+\newcommand{\pctOffDownAtt}{16}
+\newcommand{\pickUpR}{44}
+\newcommand{\pickUpChanceR}{44}
+\newcommand{\pickDownR}{52}
+\newcommand{\pickDownChanceR}{44}
+\newcommand{\swapPMax}{.008}
+\newcommand{\choiceRhoMin}{.84}
 \newcommand{\mirrorAuc}{.75}
 \newcommand{\baseAuc}{.77}
-\newcommand{\mirrorKeeper}{$-$.04}
-\newcommand{\baseKeeper}{.09}
-\newcommand{\baseForward}{.16}
-\newcommand{\noBaseForward}{.20}
+\newcommand{\mirrorKeeper}{$-$0.04}
+\newcommand{\baseKeeper}{0.09}
+\newcommand{\baseForward}{0.16}
+\newcommand{\noBaseForward}{0.20}
 \newcommand{\noBaseTopMid}{5}
 \newcommand{\sensRhoMin}{.95}
 \newcommand{\sensTopMin}{7}
@@ -246,7 +254,7 @@
 \newcommand{\exAPrevPs}{0.012}
 \newcommand{\exAPrevPc}{0.010}
 \newcommand{\exAdPs}{0.976}
-\newcommand{\exAdPc}{$-$0.005}
+\newcommand{\exAdPc}{\ensuremath{-}0.005}
 \newcommand{\exALp}{1.673}
 \newcommand{\exALm}{0.970}
 \newcommand{\exAV}{1.638}
@@ -260,14 +268,14 @@
 \newcommand{\exBPc}{0.020}
 \newcommand{\exBPrevPs}{0.021}
 \newcommand{\exBPrevPc}{0.429}
-\newcommand{\exBdPs}{$-$0.017}
-\newcommand{\exBdPc}{$-$0.409}
+\newcommand{\exBdPs}{\ensuremath{-}0.017}
+\newcommand{\exBdPc}{\ensuremath{-}0.409}
 \newcommand{\exBLp}{0.166}
 \newcommand{\exBLm}{1.629}
 \newcommand{\exBV}{0.663}
 \newcommand{\exBVaep}{0.392}
 \newcommand{\exBType}{clearance}
-\newcommand{\exBPlayer}{J. Alonso}
+\newcommand{\exBPlayer}{Júnior Alonso}
 \newcommand{\wxN}{6}
 \newcommand{\wxFt}{0.199}
 \newcommand{\wxFo}{0.132}
@@ -287,6 +295,8 @@
 \newcommand{\lrBnn}{-0.000265}
 \newcommand{\lrBh}{0.261}
 \newcommand{\nFeatures}{64}
+\newcommand{\foldAucS}{.768 to .775}
+\newcommand{\foldAucC}{.725 to .767}
 \newcommand{\eceMax}{1.16}
 \newcommand{\psxgGoals}{4,786}
 \newcommand{\psxgPred}{4,784}
@@ -349,14 +359,14 @@ team strength in the stakes & .99 & .99 & .99 & 1.00 & 8, 8, 7, 10 \\
 }
 \newcommand{\tabChoices}{%
 Away actions left mirrored & .97 & .94 & .84 & .95 & 10, 6, 6, 9 \\
-No penalty, corner baselines & .91 & .92 & .98 & 1.00 & 9, 5, 6, 10 \\
+No set-piece adjustments & .91 & .92 & .98 & 1.00 & 9, 5, 6, 10 \\
 }
 \newcommand{\tabGoalValues}{%
-Level, 85$'$+ & 116 & .87 & 1.43 \\
-One down, 85$'$+ & 94 & .90 & .87 \\
-Level, first 15$'$ & 486 & .89 & .69 \\
-One up, 85$'$+ & 87 & .86 & .18 \\
-Three or more up, 60$'$+ & 162 & .83 & .00 \\
+Level, 85$'$+ & 116 & 0.87 & 1.43 \\
+One down, 85$'$+ & 94 & 0.90 & 0.87 \\
+Level, first 15$'$ & 486 & 0.89 & 0.69 \\
+One up, 85$'$+ & 87 & 0.86 & 0.18 \\
+Three or more up, 60$'$+ & 162 & 0.83 & 0.00 \\
 }
 \newcommand{\tabMovers}{%
 P. Aubameyang & Fwd & Borussia Dortmund & 42 & 156 \\
@@ -385,4 +395,33 @@ Spain & 474,722 & 0.770 & 0.0133 & 0.52 & 768 & 0.739 & 0.0053 & 0.55 & 605 \\
 Score, time, home & 0.6186 & 0.7124 & 0.1535 & 0.050 \\
 + red cards & 0.6177 & 0.7133 & 0.1531 & 0.049 \\
 + red cards, score $\times$ time & 0.6178 & 0.7133 & 0.1531 & 0.048 \\
+}
+\newcommand{\tabProfiles}{%
+Forward & L. Messi & .64 (.43, .86) \\
+Midfielder & N. Fekir & .48 (.26, .71) \\
+Defender & J. Roussillon & .30 (.18, .42) \\
+Goalkeeper & N. Pope & .42 (.24, .63) \\
+}
+\newcommand{\tabPressurePrimary}{%
+Pass completion, pp & $-$1.03 ($-$1.71, $-$0.35) & 0.009 \\
+Action value, $\times 10^{-3}$ & $-$1.07 ($-$1.63, $-$0.51) & 0.001 \\
+Pass forward progress, m & +0.53 (+0.26, +0.79) & 0.001 \\
+}
+\newcommand{\tabAdjustedProfiles}{%
+L. Messi & .24 & 48\% & 1 \\
+N. Fekir & .19 & 13\% & 1 \\
+J. Roussillon & .15 & 19\% & 8 \\
+N. Pope & .11 & 27\% & 8 \\
+}
+\newcommand{\tabSwap}{%
+Taken off & Goal prevention & 0.88 (0.81, 0.95) & .004 \\
+Taken off & Attacking & 1.22 (1.13, 1.34) & $<$.004 \\
+Brought on & Goal prevention & 1.17 (1.07, 1.30) & .008 \\
+Brought on & Attacking & 0.79 (0.71, 0.87) & $<$.004 \\
+}
+\newcommand{\tabProfilesFull}{%
+Forward & L. Messi & 0.64 (0.43, 0.86) & 0.24 & 48\% \\
+Midfielder & N. Fekir & 0.48 (0.26, 0.71) & 0.19 & 13\% \\
+Defender & J. Roussillon & 0.30 (0.18, 0.42) & 0.15 & 19\% \\
+Goalkeeper & N. Pope & 0.42 (0.24, 0.63) & 0.11 & 27\% \\
 }

@@ -13,7 +13,7 @@ The next goal can go either way, so every moment in a match has two prices: what
 |---|---|
 | Real results, one goal up after 80': cost of conceding, gain from scoring | 1.58, 0.23 league points |
 | Model stakes in the same moments | 1.56, 0.23 |
-| Season ledger: net clutch value against real points | slope 1.09, r .975 |
+| Season ledger: net clutch value against real points | slope 1.09, r .98 |
 | Same player, high vs low stakes: pass completion, forward progress | -1.0 points, +0.53 m |
 | Coaches, one goal up: odds of being taken off per SD of goal-prevention rating | .88 (0.83 to 0.94) |
 | Coaches, one goal down: same, per SD of attacking rating | .84 (0.78 to 0.89) |

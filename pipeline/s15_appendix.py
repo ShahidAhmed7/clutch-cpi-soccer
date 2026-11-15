@@ -41,9 +41,9 @@ def main():
     for label, m in (("Level, 85$'$+", (g['goal_diff'] == 0) & (g['minute'] >= 85)), ("One down, 85$'$+", (g['goal_diff'] == -1) & (g['minute'] >= 85)),
                      ("Level, first 15$'$", (g['goal_diff'] == 0) & (g['minute'] < 15)), ("One up, 85$'$+", (g['goal_diff'] == 1) & (g['minute'] >= 85)),
                      ("Three or more up, 60$'$+", (g['goal_diff'] >= 3) & (g['minute'] >= 60))):
-        rows.append(f"{label} & {int(m.sum())} & {nz(g.loc[m, 'value'].mean())} & {nz(g.loc[m, 'V'].mean())} \\\\")
+        rows.append(f"{label} & {int(m.sum())} & {f2(g.loc[m, 'value'].mean())} & {f2(g.loc[m, 'V'].mean())} \\\\")
     (T / 'goal_values.tex').write_text('\n'.join(rows))
-    X['goalLevelLateV'] = nz(g.loc[(g['goal_diff'] == 0) & (g['minute'] >= 85), 'V'].mean())
+    X['goalLevelLateV'] = f2(g.loc[(g['goal_diff'] == 0) & (g['minute'] >= 85), 'V'].mean())
     X['goalUpLateV'] = nz(g.loc[(g['goal_diff'] == 1) & (g['minute'] >= 85), 'V'].mean())
     X['goalVaepLow'], X['goalVaepHigh'] = nz(g.groupby(pd.cut(g['minute'], [0, 15, 85, 200]))['value'].mean().min()), nz(g['value'].mean())
     st = v['L_plus'] + v['L_minus']
@@ -118,10 +118,10 @@ def main():
         X[f'{tag}Ps'], X[f'{tag}Pc'] = f"{r['p_scores']:.3f}", f"{r['p_concedes']:.3f}"
         X[f'{tag}PrevPs'] = f"{(prev['p_scores'] if same else prev['p_concedes']):.3f}"
         X[f'{tag}PrevPc'] = f"{(prev['p_concedes'] if same else prev['p_scores']):.3f}"
-        X[f'{tag}dPs'], X[f'{tag}dPc'] = f"{r['dP_scores']:.3f}".replace('-', '$-$'), f"{r['dP_concedes']:.3f}".replace('-', '$-$')
+        X[f'{tag}dPs'], X[f'{tag}dPc'] = f"{r['dP_scores']:.3f}".replace('-', r'\ensuremath{-}'), f"{r['dP_concedes']:.3f}".replace('-', r'\ensuremath{-}')
         X[f'{tag}Lp'], X[f'{tag}Lm'] = f"{r['L_plus']:.3f}", f"{r['L_minus']:.3f}"
-        X[f'{tag}V'] = f"{r['V']:.3f}".replace('-', '$-$')
-        X[f'{tag}Vaep'] = f"{r['value']:.3f}".replace('-', '$-$')
+        X[f'{tag}V'] = f"{r['V']:.3f}".replace('-', r'\ensuremath{-}')
+        X[f'{tag}Vaep'] = f"{r['value']:.3f}".replace('-', r'\ensuremath{-}')
         X[f'{tag}Type'] = r['type_name'].replace('_', ' ')
         X[f'{tag}Player'] = r['player_id']
     names = pd.read_json(C.RAW / 'players.json').drop_duplicates('wyId').set_index('wyId')['shortName']
@@ -131,6 +131,7 @@ def main():
     gl = [k for k, s in label.items() if s.startswith('Lille - Toulouse')][0]
     example((v['game_id'] == gl) & (v['type_name'] == 'clearance') & (v['minute'] >= 91) & (v['goal_diff'] == 1), 'exB')
     X['exBPlayer'] = names.get(X['exBPlayer'], '')
+    X['exBPlayer'] = {'J. Alonso': 'Júnior Alonso'}.get(X['exBPlayer'], X['exBPlayer'])  # full name at its only mention in the text
 
     # stakes worked example: one goal up, 85th minute, home team (held-out fold of England)
     panel = pd.read_parquet(C.WORK / 'panel.parquet')
@@ -169,6 +170,10 @@ def main():
         rows.append(f"{lg} & {int(m_s['n']):,} & {m_s['auc']:.3f} & {m_s['brier']:.4f} & {e_s * 1000:.2f} & {int(m_s['best_iter'])} & {m_c['auc']:.3f} & {m_c['brier']:.4f} & {e_c * 1000:.2f} & {int(m_c['best_iter'])} \\\\")
         eces += [e_s, e_c]
     (T / 'folds.tex').write_text('\n'.join(rows))
+    def _r(t):
+        a = met[met['target'] == t]['auc']
+        return f"{a.min():.3f} to {a.max():.3f}".replace('0.', '.')
+    X['foldAucS'], X['foldAucC'] = _r('scores'), _r('concedes')
     X['eceMax'] = f'{np.nanmax(eces) * 1000:.2f}'
     ps = pd.read_csv(R / 'psxg_metrics.csv')
     X['psxgGoals'], X['psxgPred'], X['psxgShots'] = f"{int(ps['goals'].sum()):,}", f"{ps['predicted'].sum():,.0f}", f"{int(ps['shots'].sum()):,}"

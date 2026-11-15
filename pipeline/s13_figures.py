@@ -58,7 +58,7 @@ def fig_stakes():
     axes[0].set_ylim(-0.1, 1.9)
     h = [plt.Line2D([], [], color=BLUE, lw=1.6, label='$L^{+}$, gain if the team scores next (model)'),
          plt.Line2D([], [], color=ORANGE, lw=1.6, label='$L^{-}$, cost if it concedes next (model)'),
-         plt.Line2D([], [], marker='o', color=BLUE, ls='', ms=4, label='real gain'), plt.Line2D([], [], marker='s', color=ORANGE, ls='', ms=4, label='real cost')]
+         plt.Line2D([], [], marker='o', color=BLUE, ls='', ms=4, label='observed gain'), plt.Line2D([], [], marker='s', color=ORANGE, ls='', ms=4, label='observed cost')]
     fig.legend(handles=h, loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.29), fontsize=7.6, handlelength=1.6, columnspacing=1.2)
     save(fig, 'stakes')
 
@@ -80,21 +80,22 @@ def fig_ledger(ax):
     clean(ax, 'both')
 
 
-def fig_goals(ax):
+def fig_goals(ax, highlights=None, show_mean_label=True):
     g = pd.read_csv(C.RESULTS / 'goals_vs_points.csv')
     ax.scatter(g['np_goals'], g['goal_points'], s=13, color=GREY, alpha=0.55, edgecolor='white', lw=0.4)
     mean = g['goal_points'].sum() / g['np_goals'].sum()
     xs = np.array([8, g['np_goals'].max() + 1])
     ax.plot(xs, mean * xs, color=GREY, lw=1, ls='--')
-    ax.text(33, 3.0, f'dashed: {mean:.2f} per goal', fontsize=6, color=INK2, ha='right')
+    if show_mean_label:
+        ax.text(33, 3.0, f'dashed: {mean:.2f} per goal', fontsize=6, color=INK2, ha='right')
     label = {'Gerard Moreno': (-3, 3, 'right'), 'Cristiano Ronaldo': (4, -7, 'left'), 'Mohamed Salah': (-4, 2, 'right'), 'L. Messi': (2, -8, 'center'), 'P. Aubameyang': (4, -3, 'left'),
              'S. Agüero': (-4, -3, 'right'), 'D. Zapata': (4, 3, 'left'), 'Maxi Gómez': (-3, 3, 'right'), 'H. Kane': (0, 5, 'center')}
-    for name, (dx, dy, ha) in label.items():
+    for name, (dx, dy, ha) in (label if highlights is None else highlights).items():
         r = g[g['name'] == name]
         if len(r):
             r = r.iloc[0]
             ax.scatter(r['np_goals'], r['goal_points'], s=20, color=BLUE, edgecolor='white', lw=0.5, zorder=3)
-            ax.annotate(name.replace('Mohamed ', '').replace('Cristiano ', 'C. '), (r['np_goals'], r['goal_points']), xytext=(dx, dy), textcoords='offset points', fontsize=5.8, ha=ha, color=INK)
+            ax.annotate(name.replace('Mohamed ', '').replace('Cristiano ', 'C. ').replace('Gerard ', 'G. '), (r['np_goals'], r['goal_points']), xytext=(dx, dy), textcoords='offset points', fontsize=5.8, ha=ha, color=INK)
     ax.set_xlabel('Non-penalty goals')
     ax.set_ylabel('Points from those goals')
     ax.set_title('(b) Same goals, different points', fontsize=7.5)
@@ -107,6 +108,23 @@ def fig_ledger_goals():
     fig_goals(axes[1])
     plt.tight_layout(w_pad=1.2)
     save(fig, 'ledger_goals')
+
+
+def fig_results_panels():
+    """Separate validation from player interpretation, retaining the same source data."""
+    fig, ax = plt.subplots(figsize=(3.8, 1.65))
+    fig_ledger(ax)
+    ax.set_title('')
+    ax.set_ylabel('Earned league points')
+    save(fig, 'season_points')
+
+    fig, ax = plt.subplots(figsize=(3.8, 1.65))
+    fig_goals(ax, highlights={'Gerard Moreno': (-4, 4, 'right'), 'Cristiano Ronaldo': (4, -7, 'left')}, show_mean_label=False)
+    ax.set_title('')
+    ax.set_ylabel('Season clutch value of goals\n(league points)')
+    for label in ax.texts:
+        label.set_fontsize(7)
+    save(fig, 'goals_context')
 
 
 def fig_coaches():
@@ -137,5 +155,6 @@ if __name__ == '__main__':
     OUT.mkdir(parents=True, exist_ok=True)
     fig_stakes()
     fig_ledger_goals()
+    fig_results_panels()
     fig_coaches()
     print('figures done')
