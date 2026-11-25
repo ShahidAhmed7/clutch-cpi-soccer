@@ -38,11 +38,49 @@ pytest tests                # data contracts: scores match official results, own
 
 Build the paper from `paper/` with `tectonic cpi_ccis.tex` (Springer CCIS/LNCS format, llncs v2.24 included), or upload the folder to Overleaf. Fig. 1 is `paper/figures/method.pdf`, a vector conversion of `paper/figures/method.svg`.
 
+## Run CPI on another league
+
+`run_league.py` computes CPI for any league, season or set of matches and writes a report with tables and figures. It uses the same code as the paper after a provider-specific loading step.
+
+```bash
+python run_league.py train                     # once: fit the models on all five 2017/18 leagues and save them in models/
+python run_league.py fetch --competition "1. Bundesliga" --season 2023/2024     # Hudl StatsBomb open data, no account needed
+python run_league.py run --data data_in/statsbomb --competition "1. Bundesliga" --season 2023/2024
+```
+
+Results go to `runs/<name>/`: `report.md`, `player_ratings.csv`, `action_values.parquet`, `top_clutch_actions.csv`, `goalkeepers.csv`, `figures/` and `run_info.json`.
+
+| `--provider` | Data | Conversion to actions |
+|---|---|---|
+| `statsbomb` | Hudl StatsBomb Open Data or API export (Events v4, Lineups v2, Matches v3; data version 1.1.0): the open-data folder layout, or a flat folder of `events/` and `lineups/` | socceraction's StatsBomb converter |
+| `wyscout-v2` | Wyscout v2 (legacy API, and the public 2017/18 release): `events_<x>.json` + `matches_<x>.json`, or one API file per match | socceraction's Wyscout converter, as in the paper |
+| `wyscout-v3` | Wyscout API v3 (current): one file per match from `matches/<id>/events?fetch=teams,players,match,substitutions,formations` | kloppy 3.19, then socceraction's kloppy converter (experimental) |
+| `kloppy:<loader>` | Anything kloppy reads (`opta`, `statsperform`, `sportec`, `datafactory`, `metrica`, `impect`, ...): a CSV with one row per match listing the loader's file arguments | kloppy, then socceraction's kloppy converter (experimental) |
+| `tables` | Your own tables as CSV or parquet (actions in SPADL, matches, players, teams, appearances; optional shots and red cards); columns in `cpi/league/bundle.py` | none needed |
+
+Without `--provider` the format is detected from the files. Options: `--models auto|pretrained|retrain`, `--min-minutes`, `--boot`, `--out`, `--save-bundle`.
+
+**Models.** By default the action values come from models fitted on the five 2017/18 leagues, and the report shows their accuracy on the new data. For a full league season of 300 or more matches, `--models auto` retrains them on that data with 5-fold cross-fitting by match and refits the stakes model.
+
+With these pretrained models, data from another provider is adjusted in two ways, and the report states both:
+- **Carries.** StatsBomb records every carry, so its native carries are replaced by socceraction's standard dribbles, as for Wyscout data. On Bundesliga 2023/24 this brought the scoring model to near-perfect calibration.
+- **Recalibration.** Predicted scoring, conceding and post-shot xG chances get a two-parameter logistic recalibration, cross-fitted by match. On Bundesliga 2023/24 this left ROC-AUC unchanged (scoring .78, conceding .82, against .77 and .75 in the paper's held-out leagues). Post-shot xG then predicted 109.9 goals against 110 scored.
+
+`--keep-carries`, `--no-harmonize` and `--no-recalibrate` turn these off.
+
+**Coverage.** Open-data club seasons usually cover one team's matches (for example, Bayer Leverkusen in the 2023/24 Bundesliga). The report then rates that team's players only, and skips analyses that need a whole league: the season ledger, repeatability across teams, and the substitution analysis.
+
+**Notes.**
+- Providers define events differently, so CPI values are comparable within a dataset more than across providers.
+- socceraction 1.5.3's kloppy converter fails on kloppy 3.16 and later, and its orientation now flips the second half. `cpi/league/kloppy_spadl.py` corrects both.
+
 ## Layout
 
 | Path | Contents |
 |---|---|
 | `cpi/` | The method: events, match state, labels, value rule, stakes, keepers, ratings |
+| `cpi/league/`, `run_league.py` | CPI for other leagues and providers: loaders, saved models, engine, report |
+| `models/` | Models fitted on all five 2017/18 leagues, used by `run_league.py` |
 | `pipeline/` | One script per stage, listed below |
 | `tests/` | Data contracts and tests against known answers |
 | `WyScout/` | Raw public data (CC BY 4.0), unchanged |
@@ -70,4 +108,6 @@ An earlier version of this work, submitted as an abstract, is at commit `e76eb8f
 
 ## Data and licences
 
-Raw data: Pappalardo et al., *A public data set of spatio-temporal match events in soccer competitions*, Scientific Data 6, 236 (2019), https://doi.org/10.1038/s41597-019-0247-7, CC BY 4.0. See [`DATA_LICENSE.md`](DATA_LICENSE.md). Code: MIT ([`LICENSE`](LICENSE)). Conversion, features and the value rule use [socceraction](https://github.com/ML-KULeuven/socceraction).
+Raw data: Pappalardo et al., *A public data set of spatio-temporal match events in soccer competitions*, Scientific Data 6, 236 (2019), https://doi.org/10.1038/s41597-019-0247-7, CC BY 4.0. See [`DATA_LICENSE.md`](DATA_LICENSE.md). Code: MIT ([`LICENSE`](LICENSE)). Conversion, features and the value rule use [socceraction](https://github.com/ML-KULeuven/socceraction); other providers are read with [kloppy](https://github.com/PySport/kloppy).
+
+Data you analyse with `run_league.py` keeps its own licence. Hudl StatsBomb open data (https://github.com/hudl/open-data) asks that published work names StatsBomb as the data source and uses their logo. Downloaded data (`data_in/`) and run outputs (`runs/`) are not tracked.

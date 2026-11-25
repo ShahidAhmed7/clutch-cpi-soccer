@@ -15,3 +15,8 @@ __pycache__/
 work/
 .venv/
 .pytest_cache/
+
+# downloaded or user-provided league data, and run outputs
+data_in/
+runs/
+catboost_info/

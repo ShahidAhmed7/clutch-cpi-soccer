@@ -10,6 +10,7 @@ iniconfig==2.3.1
 interface-meta==2.0.1
 joblib==1.6.0
 kiwisolver==1.5.1
+kloppy==3.19.1
 lxml==4.9.4
 matplotlib==3.11.2
 multimethod==1.12
@@ -35,6 +36,7 @@ scikit-learn==1.9.1
 scipy==1.17.1
 six==1.17.0
 socceraction==1.5.3
+sortedcontainers==2.4.0
 statsmodels==0.15.0
 threadpoolctl==3.8.0
 tqdm==4.70.1
