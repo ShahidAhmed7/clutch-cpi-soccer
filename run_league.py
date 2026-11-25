@@ -1,6 +1,6 @@
 """CPI for any league, season or set of matches, from StatsBomb, Wyscout (v2 or v3), any kloppy provider, or your own tables.
 
-One-time setup (fits the models on the five 2017/18 leagues; needs the paper pipeline's work/ files, about 30 minutes on a laptop):
+The fitted models are included in models/. To refit them (needs the work/ files from python run_all.py, about 30 minutes):
     python run_league.py train
 
 Get data (Hudl StatsBomb open data needs no account):
@@ -150,10 +150,13 @@ def main():
     f.add_argument('--season', required=True)
     f.add_argument('--out', default=str(ROOT / 'data_in' / 'statsbomb'))
     f.set_defaults(func=cmd_fetch)
-    t = sub.add_parser('train', help='fit and save the pretrained models (one time)')
+    t = sub.add_parser('train', help='refit the saved models (needs work/ from python run_all.py)')
     t.set_defaults(func=cmd_train)
     args = ap.parse_args()
-    args.func(args)
+    try:
+        args.func(args)
+    except (ValueError, FileNotFoundError) as e:          # wrong season, folder or format: say what is available, no traceback
+        sys.exit(f'\nerror: {e}')
 
 
 if __name__ == '__main__':

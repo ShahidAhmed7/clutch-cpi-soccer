@@ -40,39 +40,109 @@ Build the paper from `paper/` with `tectonic cpi_ccis.tex` (Springer CCIS/LNCS f
 
 ## Run CPI on another league
 
-`run_league.py` computes CPI for any league, season or set of matches and writes a report with tables and figures. It uses the same code as the paper after a provider-specific loading step.
+`run_league.py` computes CPI for any league, season or set of matches. You give it event data from StatsBomb, Wyscout, Opta or another provider, and it writes a report with player ratings, the most valuable actions, goalkeeper ratings and figures. It uses the same method as the paper. The fitted models are included in `models/`, so no training is needed.
+
+### 1. Set up (once)
 
 ```bash
-python run_league.py train                     # once: fit the models on all five 2017/18 leagues and save them in models/
-python run_league.py fetch --competition "1. Bundesliga" --season 2023/2024     # Hudl StatsBomb open data, no account needed
+git clone https://github.com/ShahidAhmed7/clutch-cpi-soccer && cd clutch-cpi-soccer
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements.txt                         # Python 3.12
+```
+
+### 2. Get data
+
+**Free data (Hudl StatsBomb open data, no account needed).** Download a season by its name:
+
+```bash
+python run_league.py fetch --competition "1. Bundesliga" --season 2023/2024
+python run_league.py fetch --competition "La Liga" --season 2019/2020
+```
+
+The files are saved in `data_in/statsbomb/`. If the name is not in the open data, the command prints every competition and season that is.
+
+**Your own data.** Put the files in one folder and pass that folder to `--data` in step 3. The format is detected automatically.
+
+| Your data | Put in the folder | `--provider` |
+|---|---|---|
+| Hudl StatsBomb (open data or API export) | `events/<match_id>.json` and `lineups/<match_id>.json`, plus `matches/<competition>/<season>.json` or one `matches.json` | `statsbomb` |
+| Wyscout v3, the current API | one JSON file per match from `matches/<id>/events?fetch=teams,players,match,substitutions,formations` | `wyscout-v3` |
+| Wyscout v2, the legacy API or the 2017/18 public release | `events_<name>.json` and `matches_<name>.json` (plus `players.json`, `teams.json`), or one API file per match | `wyscout-v2` |
+| Opta, Stats Perform, Sportec/DFL, Metrica, Impect, DataFactory | the provider's files, plus a CSV listing each match's files (example below) | `kloppy:opta`, `kloppy:sportec`, ... |
+| Any other source, already converted | `actions`, `matches`, `players`, `teams`, `appearances` as CSV or parquet; columns are listed in `cpi/league/bundle.py` | `tables` |
+
+For Opta, the CSV has one row per match with kloppy's file arguments. Paths are relative to the CSV:
+
+```csv
+f7_data,f24_data
+f7/match1.xml,f24/match1.xml
+f7/match2.xml,f24/match2.xml
+```
+
+### 3. Run
+
+```bash
 python run_league.py run --data data_in/statsbomb --competition "1. Bundesliga" --season 2023/2024
 ```
 
-Results go to `runs/<name>/`: `report.md`, `player_ratings.csv`, `action_values.parquet`, `top_clutch_actions.csv`, `goalkeepers.csv`, `figures/` and `run_info.json`.
+More examples:
 
-| `--provider` | Data | Conversion to actions |
+```bash
+python run_league.py run --data data_in/statsbomb --competition "La Liga" --season 2019/2020
+python run_league.py run --data WyScout --competition Spain                        # the paper's raw data, one league
+python run_league.py run --data my_wyscout_v3_matches/ --name "Serie A 2023-24"
+python run_league.py run --data opta/matches.csv --provider kloppy:opta --name "Eredivisie 2022-23"
+python run_league.py list --data data_in/statsbomb                                 # what a data folder contains
+```
+
+A one-team season takes about 15 seconds. A full league season with retrained models takes about 10 minutes. The terminal shows each step and ends with a summary:
+
+```text
+provider: statsbomb
+StatsBomb: 34 matches in data_in/statsbomb/data
+recalibrated: scoring a=0.11 b=1.07; conceding a=-1.64 b=0.78
+15 players with at least 900 minutes (focus team only)
+1. Bundesliga 2023/2024: 34 matches, 80,213 actions, models pretrained, scoring AUC 0.776, 15 rated players, 11s
+open runs/1_Bundesliga_2023_2024/report.md
+```
+
+### 4. Read the results
+
+Everything goes to `runs/<name>/`. Start with `report.md`.
+
+| File | Contents |
+|---|---|
+| `report.md` | The full report: data checks, model accuracy, what a goal is worth, player ratings by position, top actions, goalkeepers, and what was not run and why |
+| `player_ratings.csv` | Rated players: CPI per 90 with a 95% interval, adjusted rating, attacking and prevention parts, VAEP, minutes, goals |
+| `all_players_per90.csv` | Every player with minutes, including those below the rating threshold |
+| `top_clutch_actions.csv`, `top_preventive_actions.csv` | The most valuable actions and the most valuable defensive actions, with match, minute and score |
+| `goalkeepers.csv` | Shots faced, post-shot xG, goals prevented and points saved |
+| `goals_vs_value.csv`, `goal_values_by_context.csv` | Goals against their value in league points, and goals by match situation |
+| `action_values.parquet` | Every action with its probabilities, stakes and values |
+| `figures/` | Stakes over the match, top players with intervals, goals against value, and the season ledger for full leagues (PNG and PDF) |
+| `run_info.json` | Every number in the report, for use in other code |
+
+### Options
+
+| Option | Default | Meaning |
 |---|---|---|
-| `statsbomb` | Hudl StatsBomb Open Data or API export (Events v4, Lineups v2, Matches v3; data version 1.1.0): the open-data folder layout, or a flat folder of `events/` and `lineups/` | socceraction's StatsBomb converter |
-| `wyscout-v2` | Wyscout v2 (legacy API, and the public 2017/18 release): `events_<x>.json` + `matches_<x>.json`, or one API file per match | socceraction's Wyscout converter, as in the paper |
-| `wyscout-v3` | Wyscout API v3 (current): one file per match from `matches/<id>/events?fetch=teams,players,match,substitutions,formations` | kloppy 3.19, then socceraction's kloppy converter (experimental) |
-| `kloppy:<loader>` | Anything kloppy reads (`opta`, `statsperform`, `sportec`, `datafactory`, `metrica`, `impect`, ...): a CSV with one row per match listing the loader's file arguments | kloppy, then socceraction's kloppy converter (experimental) |
-| `tables` | Your own tables as CSV or parquet (actions in SPADL, matches, players, teams, appearances; optional shots and red cards); columns in `cpi/league/bundle.py` | none needed |
+| `--name` | from the data | Report title and output folder name |
+| `--out` | `runs/<name>/` | Output folder |
+| `--provider` | detected | Data format, see step 2 |
+| `--competition`, `--season` | | Which season to use when the folder has several (StatsBomb: name or id; Wyscout v2: file name, e.g. `Spain`) |
+| `--models` | `auto` | `pretrained` uses the saved models; `retrain` fits new ones on your data (needs a full league season); `auto` retrains for full leagues of 300+ matches |
+| `--min-minutes` | 900 | Minutes a player needs to be rated (lowered automatically for short datasets) |
+| `--boot` | 1000 | Match resamples for the 95% intervals |
+| `--workers` | 6 | Parallel processes |
+| `--save-bundle` | off | Also save the converted tables, to rerun later with `--provider tables` |
+| `--keep-carries`, `--no-harmonize`, `--no-recalibrate` | off | Turn off the adjustments for other providers (below) |
 
-Without `--provider` the format is detected from the files. Options: `--models auto|pretrained|retrain`, `--min-minutes`, `--boot`, `--out`, `--save-bundle`.
+### Good to know
 
-**Models.** By default the action values come from models fitted on the five 2017/18 leagues, and the report shows their accuracy on the new data. For a full league season of 300 or more matches, `--models auto` retrains them on that data with 5-fold cross-fitting by match and refits the stakes model.
-
-With these pretrained models, data from another provider is adjusted in two ways, and the report states both:
-- **Carries.** StatsBomb records every carry, so its native carries are replaced by socceraction's standard dribbles, as for Wyscout data. On Bundesliga 2023/24 this brought the scoring model to near-perfect calibration.
-- **Recalibration.** Predicted scoring, conceding and post-shot xG chances get a two-parameter logistic recalibration, cross-fitted by match. On Bundesliga 2023/24 this left ROC-AUC unchanged (scoring .78, conceding .82, against .77 and .75 in the paper's held-out leagues). Post-shot xG then predicted 109.9 goals against 110 scored.
-
-`--keep-carries`, `--no-harmonize` and `--no-recalibrate` turn these off.
-
-**Coverage.** Open-data club seasons usually cover one team's matches (for example, Bayer Leverkusen in the 2023/24 Bundesliga). The report then rates that team's players only, and skips analyses that need a whole league: the season ledger, repeatability across teams, and the substitution analysis.
-
-**Notes.**
-- Providers define events differently, so CPI values are comparable within a dataset more than across providers.
-- socceraction 1.5.3's kloppy converter fails on kloppy 3.16 and later, and its orientation now flips the second half. `cpi/league/kloppy_spadl.py` corrects both.
+- **Free club data usually covers one team.** StatsBomb's open club seasons cover one team's matches, for example Bayer Leverkusen in the 2023/24 Bundesliga. The report then rates that team's players only, and skips what needs a whole league: the season ledger, stakes against real results, and repeatability. With a full league season, everything runs.
+- **Other providers are adjusted to the models.** The saved models were fitted on Wyscout data. StatsBomb records every carry, so carries are replaced by the standard dribbles used for Wyscout. Predicted chances are then recalibrated on your data, cross-fitted by match. On Bundesliga 2023/24, this put predicted and observed scoring rates level, and post-shot xG predicted 110 goals against 110 scored. The report states every adjustment it made.
+- **Experimental routes.** Wyscout v3 and the kloppy providers are converted through kloppy, a route socceraction validates only for StatsBomb. Ratings are comparable within one dataset more than across providers.
+- **Refitting the models.** `python run_league.py train` refits the saved models. It needs the `work/` files from `python run_all.py`.
 
 ## Layout
 
